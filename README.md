@@ -16,18 +16,30 @@ Annan Li<sup>1</sup>&nbsp;
 [![ArXiv](https://img.shields.io/badge/ArXiv-<2506.09839>-<COLOR>.svg)](https://arxiv.org/pdf/2506.09839) [![Webpage](https://img.shields.io/badge/Webpage-OctoNav-<COLOR>.svg)](https://buaa-colalab.github.io/OctoNav/) [![Demo](https://img.shields.io/badge/Demo-Robot-<COLOR>.svg)](https://buaa-colalab.github.io/OctoNav/)
 
 <p align="center">
-  <img src="assets/teaser.pdf" alt="TAX" style="display: block; margin: 0 auto;" width="600px" />
+  <img src="assets/teaser.png" width="600">>
 </p>
+
 </div>
 On the left, we present the large-scale OctoNav-Bench, which contains diverse instruction-trajectory pairs and the elaborate TBA-CoT dataset across numerous scenes. Based on OctoNav-Bench and our method/training designs, we introduce a VLA-based method, termed OctoNav-R1. On the right, (I) demonstrates the performance comparisons on OctoNav-Bench, where we provide a fine-grained breakdown of accuracy across various navigation capabilities. OctoNav-R1 outperforms previous methods in all capabilities, demonstrating its versatility. (II) presents a robot demo in the real world, which is driven by the OctoNav-R1, showing its preliminary sim2real generalization.
 
 
 ## What is the OctoNav-Bench?
 A large-scale and unified benchmark specifically designed for generalist embodied navigation, which is distinguished by the following core features. 
-* **Largescale Annotations:** OctoNav-Bench encompasses 400+ diverse 3D scenes sourced from widely used HM3D and Gibson etc. Also, OctoNav-Bench provides 45k+ annotated instruction-trajectory pairs via the designed automatic annotation pipeline, supporting large-scale training. 
+* **Large-scale Annotations:** OctoNav-Bench encompasses 400+ diverse 3D scenes sourced from widely used HM3D and Gibson etc. Also, OctoNav-Bench provides 45k+ annotated instruction-trajectory pairs via the designed automatic annotation pipeline, supporting large-scale training. 
 * **Freeform, Multi-Model and Multi-capability Instructions:** The instructions are generated in free-form descriptions. First, the capabilities included in the instruction are sampled from arbitrary combinations of ObjNav, PointNav, ImgNav, Ins-ImgNav, and VLN, i.e., each instruction contains multiple navigation capabilities simultaneously. Moreover, these instructions are multimodal, incorporating textual, visual (e.g., reference scene-/object-level images), and spatial (e.g., coordinates) descriptions.
 * **TBA-CoT Dataset:** We leverage Qwen-VL and DeepSeek-R1 to construct a Think-Before-Action Chain-of-Thought (TBA-CoT) dataset, which captures the deliberative reasoning process behind each action decision. Such a dataset can be used to supervise and enhance the agent’s reasoning ability.
 * **Continuous Environments with RL Support:** Unlike discrete or graph-based settings, OctoNav-Bench provides continuous simulation environments, allowing agents to move freely and acquire visual observations at arbitrary locations. Thus, it supports active learning like online RL.
+<br>
+<br>
+
+<p align="center">
+  <img src="assets/comparison.png" width="600">>
+</p>
+<p>
+  <em style="font-size: 12px;">
+*Comparisons between OctoNav-Bench and previous benchmarks.* NT denotes the task number. Mixed indicates whether a single instruction integrates multiple capabilities. Modality is the modality within instructions, where [V,L,P] denote [vision, language, point]. TBA presents the think-before-action annotations. DE, CE denote the discrete and continuous environments.
+  </em>
+</p>
 
 ## What is the OctoNav-R1?
 A VLA-based model designed and trained on OctoNav-Bench, and is distinguished by the following key aspects: 
