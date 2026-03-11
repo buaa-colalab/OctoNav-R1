@@ -1,0 +1,34 @@
+defaults:
+  - task_config_base
+  - actions:
+    - stop
+    - move_forward
+    - turn_left
+    - turn_right
+    - look_up
+    - look_down
+  - measurements:
+    - distance_to_goal
+    - success
+    - spl
+  - lab_sensors:
+    - octonav_instruction_sensor
+  - _self_
+
+
+actions:
+  look_up:
+    tilt_angle: 30
+  look_down:
+    tilt_angle: 30
+
+type: VLN-v0
+end_on_success: True
+success_measure: "spl"
+
+
+goal_sensor_uuid: instruction
+
+measurements:
+  success:
+    success_distance: 3.0

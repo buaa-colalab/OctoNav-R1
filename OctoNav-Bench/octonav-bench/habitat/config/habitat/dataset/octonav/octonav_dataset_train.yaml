@@ -1,0 +1,27 @@
+# @package habitat.dataset
+defaults:
+  - /habitat/dataset: dataset_config_schema
+  - _self_
+
+type: OctoNav-v1
+datasets: 
+  - dataset_name: mp3d
+    task: OctoNav
+    split: train
+    data_path: data/datasets/octonav/mp3d/{split}/{split}.json.gz
+  - dataset_name: hm3d
+    task: OctoNav
+    split: train
+    data_path: data/datasets/octonav/hm3d/{split}/{split}.json.gz
+  - dataset_name: gibson
+    task: OctoNav
+    split: train
+    data_path: data/datasets/octonav/gibson/{split}/{split}.json.gz
+  - dataset_name: procthor-hab
+    task: OctoNav
+    split: train
+    data_path: data/datasets/octonav/procthor-hab/{split}/{split}.json.gz
+    scenes_dir: data/scene_datasets/ai2thor-hab/ai2thor-hab/configs/scenes/ProcTHOR/
+    overrides: 
+      scene_dataset: "data/scene_datasets/ai2thor-hab/ai2thor-hab/ai2thor-hab.scene_dataset_config.json"
+      navmesh_include_static_objects: True

@@ -1,0 +1,45 @@
+defaults:
+  - task_config_base
+  - actions:
+    - stop
+    - move_forward
+    - turn_left
+    - turn_right
+    - look_up
+    - look_down
+  - measurements:
+    - octonav_distance_to_goal
+    - octonav_task_success
+    - octonav_oracle_success
+    - octonav_success
+    - octonav_spl
+    - octonav_localspl
+    - octonav_final_success
+  - lab_sensors:
+    - octonav_instruction_sensor
+  - _self_
+
+actions:
+  look_up:
+    tilt_angle: 30
+  look_down:
+    tilt_angle: 30
+
+type: OctoNav-v1
+end_on_success: True
+reward_measure: "distance_to_goal_reward"
+success_measure: "spl"
+
+
+goal_sensor_uuid: instruction
+
+
+measurements:
+  octonav_task_success:
+    success_distance:
+      PointNav: 0.2
+      ImageNav: 0.2
+      ObjectNav: 0.2
+      InstanceImageNav: 0.2
+      R2R-VLN-CE: 0.2
+      RxR-VLN-CE: 0.2

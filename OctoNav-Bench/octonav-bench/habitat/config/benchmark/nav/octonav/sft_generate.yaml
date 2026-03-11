@@ -1,0 +1,36 @@
+# @package _global_
+
+defaults:
+  - /habitat: habitat_config_base
+  - /habitat/simulator/sensor_setups@habitat.simulator.agents.main_agent: rgb_agent
+  - /habitat/dataset/octonav: octonav_dataset_train
+  - _self_
+
+habitat:
+  tasks_config_path:
+    ObjectNav: benchmark/nav/octonav/objectnav_task.yaml
+    PointNav: benchmark/nav/octonav/pointnav_task.yaml
+    ImageNav: benchmark/nav/octonav/imagenav_task.yaml
+    InstanceImageNav: benchmark/nav/octonav/instanceimagenav_task.yaml
+    R2R-VLN-CE: benchmark/nav/octonav/r2rvlnce_task.yaml
+    RxR-VLN-CE: benchmark/nav/octonav/rxrvlnce_task.yaml
+    OctoNav: benchmark/nav/octonav/octonav_task_sft.yaml
+  environment:
+    max_episode_steps: 500
+  simulator:
+    type: OctoSim-v0
+    forward_step_size: 0.25
+    turn_angle: 30
+    agents:
+      main_agent:
+        sim_sensors:
+          rgb_sensor:
+            width: 640
+            height: 480
+            hfov: 90
+            position: [0, 1.25, 0]
+        height: 1.25
+        radius: 0.1
+    habitat_sim_v0:
+      gpu_device_id: 0
+      allow_sliding: True
