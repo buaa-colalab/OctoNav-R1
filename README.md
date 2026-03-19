@@ -23,7 +23,7 @@ Annan Li<sup>1</sup>&nbsp;
 On the left, we present the large-scale OctoNav-Bench, which contains diverse instruction-trajectory pairs and the elaborate TBA-CoT dataset across numerous scenes. Based on OctoNav-Bench and our method/training designs, we introduce a VLA-based method, termed OctoNav-R1. On the right, (I) demonstrates the performance comparisons on OctoNav-Bench, where we provide a fine-grained breakdown of accuracy across various navigation capabilities. OctoNav-R1 outperforms previous methods in all capabilities, demonstrating its versatility. (II) presents a robot demo in the real world, which is driven by the OctoNav-R1, showing its preliminary sim2real generalization.
 
 ## TO DO
-- [ ] Release of OctoNav-Bench for training and evaluation.
+- [x] Release of OctoNav-Bench for training and evaluation.
 - [ ] Release of OctoNav-R1.
       
 ## What is the OctoNav-Bench?
