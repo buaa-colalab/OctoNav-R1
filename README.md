@@ -1,5 +1,5 @@
 <div align="center">
-<h3>OctoNav: Towards Generalist Embodied Navigation</h3>
+<h1>OctoNav: Towards Generalist Embodied Navigation</h1>
 
 [Chen Gao](https://chengaopro.github.io/)<sup>1,2*</sup>&nbsp;
 Liankai Jin<sup>1*</sup>&nbsp;
@@ -12,21 +12,36 @@ Annan Li<sup>1</sup>&nbsp;
 [Si Liu](https://scholar.google.com/citations?user=-QtVtNEAAAAJ&hl=zh-CN)<sup>1+</sup>&nbsp;
 
 <sup>1</sup>Beihang University&nbsp; <sup>2</sup> National University of Singapore&nbsp; <sup>3</sup>Peking University&nbsp; <sup>4</sup>Zhongguancun Academy&nbsp;
- 
-[![ArXiv](https://img.shields.io/badge/ArXiv-<2506.09839>-<COLOR>.svg)](https://arxiv.org/pdf/2506.09839) [![Webpage](https://img.shields.io/badge/Webpage-OctoNav-<COLOR>.svg)](https://buaa-colalab.github.io/OctoNav/) [![Demo](https://img.shields.io/badge/Demo-Robot-<COLOR>.svg)](https://buaa-colalab.github.io/OctoNav/)
+
+<div>
+    <strong>CVPR 2026</strong>
+</div>
+
+<div>
+    <h4 align="center">
+        <a href="https://arxiv.org/pdf/2506.09839" target='_blank'>
+        <img src="https://img.shields.io/badge/arXiv-2506.09839-b31b1b.svg">
+        </a>
+        <a href="https://buaa-colalab.github.io/OctoNav/" target='_blank'>
+        <img src="https://img.shields.io/badge/Project-Page-green">
+        </a>
+        <a href="https://buaa-colalab.github.io/OctoNav/" target='_blank'>
+        <img src="https://img.shields.io/badge/Demo-Robot-blue.svg">
+        </a>
+    </h4>
+</div>
+
 
 <p align="center">
-  <img src="assets/teaser.png" width="600">>
+  <img src="assets/teaser.png" width="600">
 </p>
 
 </div>
 On the left, we present the large-scale OctoNav-Bench, which contains diverse instruction-trajectory pairs and the elaborate TBA-CoT dataset across numerous scenes. Based on OctoNav-Bench and our method/training designs, we introduce a VLA-based method, termed OctoNav-R1. On the right, (I) demonstrates the performance comparisons on OctoNav-Bench, where we provide a fine-grained breakdown of accuracy across various navigation capabilities. OctoNav-R1 outperforms previous methods in all capabilities, demonstrating its versatility. (II) presents a robot demo in the real world, which is driven by the OctoNav-R1, showing its preliminary sim2real generalization.
+    
+## 💡 Highlights
 
-## TO DO
-- [x] Release of OctoNav-Bench for training and evaluation.
-- [ ] Release of OctoNav-R1.
-      
-## What is the OctoNav-Bench?
+### What is the OctoNav-Bench?
 A large-scale and unified benchmark specifically designed for generalist embodied navigation, which is distinguished by the following core features. 
 * **Large-scale Annotations:** OctoNav-Bench encompasses 400+ diverse 3D scenes sourced from widely used HM3D and Gibson etc. Also, OctoNav-Bench provides 45k+ annotated instruction-trajectory pairs via the designed automatic annotation pipeline, supporting large-scale training. 
 * **Freeform, Multi-Model and Multi-capability Instructions:** The instructions are generated in free-form descriptions. First, the capabilities included in the instruction are sampled from arbitrary combinations of ObjNav, PointNav, ImgNav, Ins-ImgNav, and VLN, i.e., each instruction contains multiple navigation capabilities simultaneously. Moreover, these instructions are multimodal, incorporating textual, visual (e.g., reference scene-/object-level images), and spatial (e.g., coordinates) descriptions.
@@ -44,14 +59,16 @@ A large-scale and unified benchmark specifically designed for generalist embodie
   </em>
 </p>
 
-## What is the OctoNav-R1?
+### What is the OctoNav-R1?
 A VLA-based model designed and trained on OctoNav-Bench, and is distinguished by the following key aspects: 
 * **Free-form, Multimodal and Multi-capability Instruction Following:** OctoNav-R1 can accept free-form instructions that comprise multi-modal and multi-capability. Based on step-wise egocentric visual observations, the model can directly generate a sequence of low-level actions (e.g., move forward, turn left/right), enabling it to follow complex instructions in a unified manner. 
 * **RL-enhanced VLA Hybrid Training Paradigm:** Unlike conventional VLA models that are typically fine-tuned via SFT on static datasets, OctoNav-R1 are trained by the proposed Hybrid Training Paradigm (HTP). Specifically, we integrate RL into the VLA training pipeline, making HTP combine Action-/TBA-SFT, Nav-GRPO, and online RL stages. 
 * **Thinking-Before-Action:** Inspired by the long CoT reasoning within DeepSeek-R1, we argue that previous VLA models, which directly map observations to actions, lack explicit thinking processes and struggle with complicated tasks. Therefore, we leverage the TBACoT dataset to train OctoNav-R1 via TBA-SFT and Nav-GRPO, endowing the model with the ability to jointly produce thinking thoughts and action sequences. 
 * **Initial Sim2Real Generalization:** We deploy OctoNav-R1 on physical robots, and observe preliminary sim-to-real transfer ability without real-world fine-tuning. It further confirms the annotated OctoNav-Bench and designed OctoNav-R1.
 
-## Installation
+## 🛠️ Usage
+
+### Installation
 
 OctoNav-Bench is based on Habitat Simulator as the backend: [habitat-lab](https://github.com/facebookresearch/habitat-lab) and [habitat-sim](https://github.com/facebookresearch/habitat-sim).
 
@@ -84,9 +101,9 @@ OctoNav-Bench is based on Habitat Simulator as the backend: [habitat-lab](https:
    pip install -e octonav-bench
    ```
 
-## Data Preparation
+### Data Preparation
 
-### Scene Dataset
+#### Scene Dataset
 
 OctoNav-Bench supports four scene datasets: HM3D(v0.2), MP3D, Gibson and ProcTHOR(from AI2-THOR).
 
@@ -112,7 +129,7 @@ data/scene_datasets
 
 Note that Gibson Dataset (trainval) for use with Habitat (11 GB) is required in OctoNav-Bench, please make sure you download the right version.
 
-### Task Dataset
+#### Task Dataset
 
 We only provide the training dataset currently.
 
@@ -120,7 +137,7 @@ Download Link: [Onedrive](https://onedrive.live.com/?id=AA19F644CF9D8AFB%21s0e24
 
 Download `octonav_train.tar` and unzip, then put the `octonav` folder into `data/datasets`.
 
-### SFT Dataset(For Training)
+#### SFT Dataset(For Training)
 
 It is recommanded to download the images and videos.
 
@@ -140,11 +157,11 @@ cd octonav-bench/generate
 python generate_sft_data.py
 ```
 
-## How to do Evaluation
+### How to do Evaluation
 
 Use `habitat.Env` to interact with the environment. It's convenient to use OctoNav-Bench with your own agent.
 
-### Evaluation Process
+#### Evaluation Process
 
 Firstly, get the environment config and instantiate the environment using `habitat.Env(config=config)`. Then, for each episode, run `env.reset()` to reset the environment and switch to the next episode. After that, your agent can perform actions based on observations. The actions that agent can perform are `move_forward`, `turn_left`, `turn_right`, `look_up`, `look_down`. Use `env.reset(action)` to perform an action. Finally, make a `stop` action and get the metrics when finished the task.
 
@@ -163,7 +180,7 @@ observation = {
 
 Also, a `top_down_map` is provided in the environment metrics, you can save it in each step and make a trajectory video. But note that current `top_down_map` only support the floor where episodes start, and the map would be a mess if agent goes upstairs or downstairs.
 
-### Examples 
+#### Examples 
 
 For detailed implementation, see these examples. 
 
@@ -245,3 +262,24 @@ def evaluate_agent(agent, result_path) -> None:
     with open(os.path.join(result_path, 'metrics.json'), 'w') as f:
         json.dump(agg_metrics, f)
 ```
+
+## 📝 Citation
+
+If you find this work useful, please consider citing our paper:
+
+```bibtex
+@article{gao2025octonav,
+  title={Octonav: Towards generalist embodied navigation},
+  author={Gao, Chen and Jin, Liankai and Peng, Xingyu and Zhang, Jiazhao and Deng, Yue and Li, Annan and Wang, He and Liu, Si},
+  journal={arXiv preprint arXiv:2506.09839},
+  year={2025}
+}
+```
+
+## 📄 License
+
+This project is licensed under the MIT License. See [LICENSE](./LICENSE) for more information.
+
+## 🙏 Acknowledgement
+
+We sincerely thank [Habitat-Lab](https://github.com/facebookresearch/habitat-lab) and [Habitat-Sim](https://github.com/facebookresearch/habitat-sim) for their outstanding contributions to embodied AI simulation, convenient action APIs and open-source release.
