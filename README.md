@@ -131,11 +131,9 @@ Note that Gibson Dataset (trainval) for use with Habitat (11 GB) is required in 
 
 #### Task Dataset
 
-We only provide the training dataset currently.
-
 Download Link: [Onedrive](https://onedrive.live.com/?id=AA19F644CF9D8AFB%21s0e242c4332eb4ec29b4cc3dd2b0789df&cid=AA19F644CF9D8AFB&sb=name&sd=1&view=0) or [Baidu Cloud](https://pan.baidu.com/s/16pboBS1nIYHrFVDY0nC1og?pwd=mcbf) or [HuggingFace](https://huggingface.co/datasets/Oshwiciqwq/OctoNav-Bench).
 
-Download `octonav_train.tar` and unzip, then put the `octonav` folder into `data/datasets`.
+Download `octonav.tar` and unzip, then put the `octonav` folder into `data/datasets`.
 
 #### SFT Dataset(For Training)
 
