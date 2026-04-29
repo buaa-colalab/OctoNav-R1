@@ -1,29 +1,16 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Meta Platforms, Inc. and its affiliates.
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-"""Defines the core Simulator and Sensor class wrapper APIs. The classes here are primarily defining abstract APIs which are implemented further downstream."""
 import abc
 import time
 from collections import OrderedDict
 from enum import Enum
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Union,
-)
+from typing import (TYPE_CHECKING, Any, Dict, Iterable, List, Optional,
+                    Sequence, Union)
 
 import attr
 import numpy as np
 import quaternion
 from gym import Space, spaces
-
 from habitat.core.dataset import Episode
 
 if TYPE_CHECKING:
@@ -38,11 +25,6 @@ VisualObservation = Union[np.ndarray, "Tensor"]
 
 @attr.s(auto_attribs=True)
 class ActionSpaceConfiguration(metaclass=abc.ABCMeta):
-    """Attrs base class wrapper for DictConfig defining the action space for a task.
-
-    :property config: The action space DictConfig.
-    """
-
     config: "DictConfig"
 
     @abc.abstractmethod
@@ -70,14 +52,6 @@ class SensorTypes(Enum):
 
 
 class Sensor(metaclass=abc.ABCMeta):
-    """Represents a sensor that provides data from the environment to agent. The user of this class needs to implement the get_observation method and the user is also required to set attributes.
-
-    :data uuid: universally unique id.
-    :data sensor_type: type of Sensor, use SensorTypes enum if your sensor comes under one of it's categories.
-    :data observation_space: ``gym.Space`` object corresponding to observation of sensor.
-    :data config: The SensorConfig.
-    """
-
     uuid: str
     config: "DictConfig"
     sensor_type: SensorTypes
@@ -118,11 +92,6 @@ class Observations(Dict[str, Any]):
         should_time: bool = False,
         **kwargs: Any,
     ) -> None:
-        """..
-
-        :param sensors: list of sensors whose observations are fetched and packaged.
-        :param should_time: Optionally log performance timing metrics.
-        """
         data = []
         for uuid, sensor in sensors.items():
             t_start = time.time()
@@ -135,7 +104,6 @@ class Observations(Dict[str, Any]):
 
 
 class RGBSensor(Sensor, metaclass=abc.ABCMeta):
-    """Wrapper for 3-channel color Camera Sensors. See :ref:`Sensor` parent class for more details."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -154,7 +122,6 @@ class RGBSensor(Sensor, metaclass=abc.ABCMeta):
 
 
 class DepthSensor(Sensor, metaclass=abc.ABCMeta):
-    """Wrapper for depth Camera Sensors. See :ref:`Sensor` parent class for more details."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -173,7 +140,6 @@ class DepthSensor(Sensor, metaclass=abc.ABCMeta):
 
 
 class SemanticSensor(Sensor):
-    """Wrapper for integer id Camera Sensors where each integer is mapped to an object instance or semantic class. See :ref:`Sensor` parent class for more details."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -192,7 +158,6 @@ class SemanticSensor(Sensor):
 
 
 class BumpSensor(Sensor):
-    """Wrapper for non-visual navmesh collision Sensors. See :ref:`Sensor` parent class for more details."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -211,12 +176,6 @@ class BumpSensor(Sensor):
 
 
 class SensorSuite:
-    """Represents a set of sensors, with each sensor being identified
-    through a unique id.
-
-    :data sensors: dict mapping Sensors' uids to their Sensor objects.
-    :data observation_spaces: dict of observation spaces for each sensor keyed by uid.
-    """
 
     sensors: Dict[str, Sensor]
     observation_spaces: spaces.Dict
@@ -230,9 +189,8 @@ class SensorSuite:
         self.sensors = OrderedDict()
         ordered_spaces: OrderedDict[str, Space] = OrderedDict()
         for sensor in sensors:
-            assert (
-                sensor.uuid not in self.sensors
-            ), "'{}' is duplicated sensor uuid".format(sensor.uuid)
+            assert sensor.uuid not in self.sensors, (
+                "'{}' is duplicated sensor uuid".format(sensor.uuid))
             self.sensors[sensor.uuid] = sensor
             ordered_spaces[sensor.uuid] = sensor.observation_space
         self.observation_spaces = spaces.Dict(spaces=ordered_spaces)
@@ -249,11 +207,6 @@ class SensorSuite:
 
 @attr.s(auto_attribs=True)
 class AgentState:
-    """Represents the rigid transformation state of an agent as a 3D position and quaternion rotation.
-
-    :property position: 3D position of the agent's base. Typically on the navmesh.
-    :property rotation: quaternion orientation of the agent's base. Typically a yaw rotation.
-    """
 
     position: Union[None, List[float], np.ndarray]
     rotation: Union[None, np.ndarray, quaternion.quaternion] = None
@@ -261,12 +214,6 @@ class AgentState:
 
 @attr.s(auto_attribs=True)
 class ShortestPathPoint:
-    """Wrapper for the information embedded in a single point for a ShortestPath planner object: 3D position, quaternion rotation, and the action which led to the state.
-
-    :property position: 3D global position of the path point. Typically corresponds to an agent's base position on the navmesh.
-    :property rotation: quaternion orientation of the agent at the point.
-    :property action: the action, typically a discrete transformation, which led to the this path point for use in path planning.
-    """
 
     position: List[Any]
     rotation: List[Any]
@@ -274,11 +221,6 @@ class ShortestPathPoint:
 
 
 class Simulator:
-    """Abstract simulator class for habitat. New simulators to be added to habitat
-    must derive from this class and implement the abstract methods.
-
-    :data habitat_config: The Dictconfig object containing configuration parameters specifically pertaining to the habitat Simulator.
-    """
 
     habitat_config: "DictConfig"
 
@@ -311,17 +253,16 @@ class Simulator:
     def seed(self, seed: int) -> None:
         raise NotImplementedError
 
-    def reconfigure(
-        self, config: "DictConfig", episode: Optional[Episode] = None
-    ) -> None:
+    def reconfigure(self,
+                    config: "DictConfig",
+                    episode: Optional[Episode] = None) -> None:
         raise NotImplementedError
 
     def geodesic_distance(
         self,
         position_a: Union[Sequence[float], np.ndarray],
-        position_b: Union[
-            Sequence[float], Sequence[Sequence[float]], np.ndarray
-        ],
+        position_b: Union[Sequence[float], Sequence[Sequence[float]],
+                          np.ndarray],
         episode: Optional[Episode] = None,
     ) -> float:
         """Calculates geodesic distance between two points.
@@ -383,8 +324,10 @@ class Simulator:
         raise NotImplementedError
 
     def action_space_shortest_path(
-        self, source: AgentState, targets: List[AgentState], agent_id: int = 0
-    ) -> List[ShortestPathPoint]:
+            self,
+            source: AgentState,
+            targets: List[AgentState],
+            agent_id: int = 0) -> List[ShortestPathPoint]:
         """Calculates the shortest path between source and target agent
         states.
 
@@ -397,8 +340,8 @@ class Simulator:
         raise NotImplementedError
 
     def get_straight_shortest_path_points(
-        self, position_a: List[float], position_b: List[float]
-    ) -> List[List[float]]:
+            self, position_a: List[float],
+            position_b: List[float]) -> List[List[float]]:
         """Returns points along the geodesic (shortest) path between two
         points irrespective of the angles between the waypoints.
 

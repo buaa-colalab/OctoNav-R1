@@ -38,12 +38,12 @@ Annan Li<sup>1</sup>&nbsp;
 
 </div>
 On the left, we present the large-scale OctoNav-Bench, which contains diverse instruction-trajectory pairs and the elaborate TBA-CoT dataset across numerous scenes. Based on OctoNav-Bench and our method/training designs, we introduce a VLA-based method, termed OctoNav-R1. On the right, (I) demonstrates the performance comparisons on OctoNav-Bench, where we provide a fine-grained breakdown of accuracy across various navigation capabilities. OctoNav-R1 outperforms previous methods in all capabilities, demonstrating its versatility. (II) presents a robot demo in the real world, which is driven by the OctoNav-R1, showing its preliminary sim2real generalization.
-    
+
 ## 💡 Highlights
 
 ### What is the OctoNav-Bench?
-A large-scale and unified benchmark specifically designed for generalist embodied navigation, which is distinguished by the following core features. 
-* **Large-scale Annotations:** OctoNav-Bench encompasses 400+ diverse 3D scenes sourced from widely used HM3D and Gibson etc. Also, OctoNav-Bench provides 45k+ annotated instruction-trajectory pairs via the designed automatic annotation pipeline, supporting large-scale training. 
+A large-scale and unified benchmark specifically designed for generalist embodied navigation, which is distinguished by the following core features.
+* **Large-scale Annotations:** OctoNav-Bench encompasses 400+ diverse 3D scenes sourced from widely used HM3D and Gibson etc. Also, OctoNav-Bench provides 45k+ annotated instruction-trajectory pairs via the designed automatic annotation pipeline, supporting large-scale training.
 * **Freeform, Multi-Model and Multi-capability Instructions:** The instructions are generated in free-form descriptions. First, the capabilities included in the instruction are sampled from arbitrary combinations of ObjNav, PointNav, ImgNav, Ins-ImgNav, and VLN, i.e., each instruction contains multiple navigation capabilities simultaneously. Moreover, these instructions are multimodal, incorporating textual, visual (e.g., reference scene-/object-level images), and spatial (e.g., coordinates) descriptions.
 * **TBA-CoT Dataset:** We leverage Qwen-VL and DeepSeek-R1 to construct a Think-Before-Action Chain-of-Thought (TBA-CoT) dataset, which captures the deliberative reasoning process behind each action decision. Such a dataset can be used to supervise and enhance the agent’s reasoning ability.
 * **Continuous Environments with RL Support:** Unlike discrete or graph-based settings, OctoNav-Bench provides continuous simulation environments, allowing agents to move freely and acquire visual observations at arbitrary locations. Thus, it supports active learning like online RL.
@@ -60,10 +60,10 @@ A large-scale and unified benchmark specifically designed for generalist embodie
 </p>
 
 ### What is the OctoNav-R1?
-A VLA-based model designed and trained on OctoNav-Bench, and is distinguished by the following key aspects: 
-* **Free-form, Multimodal and Multi-capability Instruction Following:** OctoNav-R1 can accept free-form instructions that comprise multi-modal and multi-capability. Based on step-wise egocentric visual observations, the model can directly generate a sequence of low-level actions (e.g., move forward, turn left/right), enabling it to follow complex instructions in a unified manner. 
-* **RL-enhanced VLA Hybrid Training Paradigm:** Unlike conventional VLA models that are typically fine-tuned via SFT on static datasets, OctoNav-R1 are trained by the proposed Hybrid Training Paradigm (HTP). Specifically, we integrate RL into the VLA training pipeline, making HTP combine Action-/TBA-SFT, Nav-GRPO, and online RL stages. 
-* **Thinking-Before-Action:** Inspired by the long CoT reasoning within DeepSeek-R1, we argue that previous VLA models, which directly map observations to actions, lack explicit thinking processes and struggle with complicated tasks. Therefore, we leverage the TBACoT dataset to train OctoNav-R1 via TBA-SFT and Nav-GRPO, endowing the model with the ability to jointly produce thinking thoughts and action sequences. 
+A VLA-based model designed and trained on OctoNav-Bench, and is distinguished by the following key aspects:
+* **Free-form, Multimodal and Multi-capability Instruction Following:** OctoNav-R1 can accept free-form instructions that comprise multi-modal and multi-capability. Based on step-wise egocentric visual observations, the model can directly generate a sequence of low-level actions (e.g., move forward, turn left/right), enabling it to follow complex instructions in a unified manner.
+* **RL-enhanced VLA Hybrid Training Paradigm:** Unlike conventional VLA models that are typically fine-tuned via SFT on static datasets, OctoNav-R1 are trained by the proposed Hybrid Training Paradigm (HTP). Specifically, we integrate RL into the VLA training pipeline, making HTP combine Action-/TBA-SFT, Nav-GRPO, and online RL stages.
+* **Thinking-Before-Action:** Inspired by the long CoT reasoning within DeepSeek-R1, we argue that previous VLA models, which directly map observations to actions, lack explicit thinking processes and struggle with complicated tasks. Therefore, we leverage the TBACoT dataset to train OctoNav-R1 via TBA-SFT and Nav-GRPO, endowing the model with the ability to jointly produce thinking thoughts and action sequences.
 * **Initial Sim2Real Generalization:** We deploy OctoNav-R1 on physical robots, and observe preliminary sim-to-real transfer ability without real-world fine-tuning. It further confirms the annotated OctoNav-Bench and designed OctoNav-R1.
 
 ## 🛠️ Usage
@@ -88,7 +88,7 @@ OctoNav-Bench is based on Habitat Simulator as the backend: [habitat-lab](https:
     ```
     Tips: If you encounter errors like
     ```
-    Platform::WindowlessEglApplication::tryCreateContext(): unable to find CUDA device 0 among xx EGL devices in total 
+    Platform::WindowlessEglApplication::tryCreateContext(): unable to find CUDA device 0 among xx EGL devices in total
     WindowlessContext: Unable to create windowless context
     ```
     Try to [download](https://anaconda.org/aihabitat/habitat-sim/files?page=1) habitat-sim package and install it locally.
@@ -96,7 +96,7 @@ OctoNav-Bench is based on Habitat Simulator as the backend: [habitat-lab](https:
 3. **Installing OctoNav-Bench**.
 
    ```shell
-   git clone 
+   git clone
    cd OctoNav-Bench
    pip install -e octonav-bench
    ```
@@ -109,7 +109,7 @@ OctoNav-Bench supports four scene datasets: HM3D(v0.2), MP3D, Gibson and ProcTHO
 
 To download these scene datasets, you can follow the [datasets download instructions](https://github.com/facebookresearch/habitat-sim/blob/main/DATASETS.md) from habitat-sim, and remember to put them in the correct path, like：
 
-``` 
+```
 data/scene_datasets
 ├── ai2thor-hab
 │   ├── ai2thor-hab
@@ -178,11 +178,11 @@ observation = {
 
 Also, a `top_down_map` is provided in the environment metrics, you can save it in each step and make a trajectory video. But note that current `top_down_map` only support the floor where episodes start, and the map would be a mess if agent goes upstairs or downstairs.
 
-#### Examples 
+#### Examples
 
-For detailed implementation, see these examples. 
+For detailed implementation, see these examples.
 
-An example of random agent: `example_random_agent.py` 
+An example of random agent: `example_random_agent.py`
 
 - You can change the random agent to your agent.
 
@@ -196,7 +196,7 @@ def evaluate_agent(agent, result_path) -> None:
     )
     env = habitat.Env(config=config)
     num_episodes = len(env.episodes)
-    
+
     EARLY_STOP_ROTATION = 25
     EARLY_STOP_STEPS = 500
 
@@ -208,26 +208,26 @@ def evaluate_agent(agent, result_path) -> None:
         info = env.get_metrics()
         iter_step = 0
         agent.reset(episode_id=_-1)
-         
+
         continuse_rotation_count = 0
         last_dtg = 999
         while not env.episode_over:
-            
+
             info = env.get_metrics()
-            
+
             if info['OctoNav']["distance_to_goal"] != last_dtg:
                 last_dtg = info['OctoNav']["distance_to_goal"]
                 continuse_rotation_count=0
             else :
-                continuse_rotation_count +=1 
-            
-            
+                continuse_rotation_count +=1
+
+
             action = agent.act(obs, info['OctoNav'], env.current_episode.episode_id)
-            
+
             if continuse_rotation_count > EARLY_STOP_ROTATION or iter_step>EARLY_STOP_STEPS:
                 action = {"action": 0}
 
-            
+
             iter_step+=1
             obs = env.step(action)
         result_dict = env.get_metrics()

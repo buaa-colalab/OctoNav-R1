@@ -4,9 +4,10 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 """
- Tokenize and vocabulary utils originally authored by @apsdehal and are
- taken from Pythia.
+Tokenize and vocabulary utils originally authored by @apsdehal and are
+taken from Pythia.
 """
+
 import json
 import os
 import re
@@ -29,9 +30,10 @@ SENTENCE_SPLIT_REGEX = re.compile(r"([^\w-]+)")
 DEFAULT_PHYSICS_CONFIG_PATH = "data/default.physics_config.json"
 
 
-def tokenize(
-    sentence, regex=SENTENCE_SPLIT_REGEX, keep=("'s"), remove=(",", "?")
-) -> List[str]:
+def tokenize(sentence,
+             regex=SENTENCE_SPLIT_REGEX,
+             keep=("'s"),
+             remove=(",", "?")) -> List[str]:
     sentence = sentence.lower()
 
     for token in keep:
@@ -48,7 +50,7 @@ def tokenize(
 def load_str_list(fname):
     with open(fname) as f:
         lines = f.readlines()
-    lines = [l.strip() for l in lines]
+    lines = [line.strip() for line in lines]
     return lines
 
 
@@ -79,17 +81,11 @@ class VocabDict:
         self.itos = self.word_list
         self.num_vocab = len(self.word_list)
 
-        self.UNK_INDEX = (
-            self.word2idx_dict[self.UNK_TOKEN]
-            if self.UNK_TOKEN in self.word2idx_dict
-            else None
-        )
+        self.UNK_INDEX = (self.word2idx_dict[self.UNK_TOKEN]
+                          if self.UNK_TOKEN in self.word2idx_dict else None)
 
-        self.PAD_INDEX = (
-            self.word2idx_dict[self.PAD_TOKEN]
-            if self.PAD_TOKEN in self.word2idx_dict
-            else None
-        )
+        self.PAD_INDEX = (self.word2idx_dict[self.PAD_TOKEN]
+                          if self.PAD_TOKEN in self.word2idx_dict else None)
 
     def idx2word(self, n_w):
         return self.word_list[n_w]
@@ -121,18 +117,15 @@ class VocabDict:
         elif self.UNK_INDEX is not None:
             return self.UNK_INDEX
         else:
-            raise ValueError(
-                "word %s not in dictionary \
-                             (while dictionary does not contain <unk>)"
-                % w
-            )
+            raise ValueError("word %s not in dictionary \
+                             (while dictionary does not contain <unk>)" % w)
 
     def tokenize_and_index(
-        self,
-        sentence,
-        regex=SENTENCE_SPLIT_REGEX,
-        keep=("'s"),
-        remove=(",", "?"),
+            self,
+            sentence,
+            regex=SENTENCE_SPLIT_REGEX,
+            keep=("'s"),
+            remove=(",", "?"),
     ) -> List[int]:
         inds = [
             self.word2idx(w)
@@ -150,13 +143,13 @@ class VocabFromText(VocabDict):
     ]
 
     def __init__(
-        self,
-        sentences,
-        min_count=1,
-        regex=SENTENCE_SPLIT_REGEX,
-        keep=(),
-        remove=(),
-        only_unk_extra=False,
+            self,
+            sentences,
+            min_count=1,
+            regex=SENTENCE_SPLIT_REGEX,
+            keep=(),
+            remove=(),
+            only_unk_extra=False,
     ):
         token_counter: typing.Counter[str] = Counter()
 
@@ -192,17 +185,15 @@ def get_action_shortest_path(
     shortest_path = []
     step_count = 0
     action = follower.get_next_action(goal_position)
-    while (
-        action is not HabitatSimActions.stop and step_count < max_episode_steps
-    ):
+    while (action is not HabitatSimActions.stop
+           and step_count < max_episode_steps):
         state = sim.get_agent_state()
         shortest_path.append(
             ShortestPathPoint(
                 state.position.tolist(),
                 quaternion_to_list(state.rotation),
                 action,
-            )
-        )
+            ))
         sim.step(action)
         step_count += 1
         action = follower.get_next_action(goal_position)

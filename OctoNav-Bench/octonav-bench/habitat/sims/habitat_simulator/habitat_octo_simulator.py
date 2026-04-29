@@ -1,60 +1,31 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Meta Platforms, Inc. and its affiliates.
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Union,
-    cast,
-)
-
 import copy
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
+
+import habitat_sim
 import magnum as mn
 import numpy as np
 from gym import spaces
-from gym.spaces.box import Box
-from omegaconf import DictConfig, OmegaConf
-
-import habitat_sim
 from habitat.config.default import get_agent_config
 from habitat.core.batch_rendering.env_batch_renderer_constants import (
-    KEYFRAME_OBSERVATION_KEY,
-    KEYFRAME_SENSOR_PREFIX,
-)
+    KEYFRAME_OBSERVATION_KEY, KEYFRAME_SENSOR_PREFIX)
 from habitat.core.dataset import Episode
 from habitat.core.registry import registry
-from habitat.core.simulator import (
-    AgentState,
-    DepthSensor,
-    Observations,
-    RGBSensor,
-    SemanticSensor,
-    Sensor,
-    SensorSuite,
-    ShortestPathPoint,
-    Simulator,
-    VisualObservation,
-)
+from habitat.core.simulator import (AgentState, Observations, SensorSuite,
+                                    ShortestPathPoint, Simulator)
 from habitat.core.spaces import Space
-from habitat.sims.habitat_simulator.habitat_simulator import (
-    overwrite_config,
-    HabitatSimSensor,
-)
+from habitat.sims.habitat_simulator.habitat_simulator import (HabitatSimSensor,
+                                                              overwrite_config)
+from omegaconf import DictConfig, OmegaConf
 
 if TYPE_CHECKING:
-    from torch import Tensor
+    pass
+
 
 @registry.register_simulator(name="OctoSim-v0")
 class HabitatOctoSim(habitat_sim.Simulator, Simulator):
+
     def __init__(self, config: DictConfig, current_episode: Episode) -> None:
         self.habitat_config = config
 
@@ -63,9 +34,8 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
             for sensor_cfg in agent_config.sim_sensors.values():
                 sensor_type = registry.get_sensor(sensor_cfg.type)
 
-                assert (
-                    sensor_type is not None
-                ), "invalid sensor type {}".format(sensor_cfg.type)
+                assert sensor_type is not None, (
+                    "invalid sensor type {}".format(sensor_cfg.type))
                 sim_sensors.append(sensor_type(sensor_cfg))
 
         self._sensor_suite = SensorSuite(sim_sensors)
@@ -79,12 +49,8 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
         for path in self.habitat_config.additional_object_paths:
             obj_attr_mgr.load_configs(path)
         self._action_space = spaces.Discrete(
-            len(
-                self.sim_config.agents[
-                    self.habitat_config.default_agent_id
-                ].action_space
-            )
-        )
+            len(self.sim_config.agents[
+                self.habitat_config.default_agent_id].action_space))
         self._prev_sim_obs: Optional[Observations] = None
 
     def rewrite_config(self, overrides: Optional[Dict] = None):
@@ -95,43 +61,38 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
         for key, value in overrides.items():
             setattr(self.habitat_config, key, value)
 
-
     def create_sim_config(
-        self, _sensor_suite: SensorSuite
-    ) -> habitat_sim.Configuration:
+            self, _sensor_suite: SensorSuite) -> habitat_sim.Configuration:
         sim_config = habitat_sim.SimulatorConfiguration()
         # Check if Habitat-Sim is post Scene Config Update
         if not hasattr(sim_config, "scene_id"):
-            raise RuntimeError(
-                "Incompatible version of Habitat-Sim detected, please upgrade habitat_sim"
-            )
+            raise RuntimeError("Incompatible version of Habitat-Sim detected, \
+please upgrade habitat_sim")
         overwrite_config(
             config_from=self.habitat_config.habitat_sim_v0,
             config_to=sim_config,
             # Ignore key as it gets propagated to sensor below
             ignore_keys={"gpu_gpu"},
         )
-        if 'mp3d' in self.habitat_config.scene:
+        if "mp3d" in self.habitat_config.scene:
             sim_config.scene_dataset_config_file = (
-                'data/scene_datasets/mp3d/mp3d.scene_dataset_config.json'
-            )
-        elif 'hm3d' in self.habitat_config.scene:
-            if 'hm3d_v0.2' in self.habitat_config.scene:
+                "data/scene_datasets/mp3d/mp3d.scene_dataset_config.json")
+        elif "hm3d" in self.habitat_config.scene:
+            if "hm3d_v0.2" in self.habitat_config.scene:
                 sim_config.scene_dataset_config_file = (
-                    'data/scene_datasets/hm3d_v0.2/hm3d_annotated_basis.scene_dataset_config.json'
-                )
+                    "data/scene_datasets/hm3d_v0.2/"
+                    "hm3d_annotated_basis.scene_dataset_config.json")
             else:
                 sim_config.scene_dataset_config_file = (
-                    'data/scene_datasets/hm3d/hm3d_annotated_basis.scene_dataset_config.json'
-                )
-        elif 'gibson' in self.habitat_config.scene:
+                    "data/scene_datasets/hm3d/"
+                    "hm3d_annotated_basis.scene_dataset_config.json")
+        elif "gibson" in self.habitat_config.scene:
             sim_config.scene_dataset_config_file = (
-                'data/scene_datasets/gibson/gibson_semantic.scene_dataset_config.json'
-            )
+                "data/scene_datasets/gibson/"
+                "gibson_semantic.scene_dataset_config.json")
         else:
             sim_config.scene_dataset_config_file = (
-                self.habitat_config.scene_dataset
-            )
+                self.habitat_config.scene_dataset)
 
         sim_config.scene_id = self.habitat_config.scene
         lab_agent_config = get_agent_config(self.habitat_config)
@@ -167,19 +128,17 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
             sim_config.navmesh_settings.agent_radius = agent_config.radius
             sim_config.navmesh_settings.agent_height = agent_config.height
             sim_config.navmesh_settings.agent_max_climb = (
-                lab_agent_config.max_climb
-            )
+                lab_agent_config.max_climb)
             sim_config.navmesh_settings.agent_max_slope = (
-                lab_agent_config.max_slope
-            )
+                lab_agent_config.max_slope)
             sim_config.navmesh_settings.include_static_objects = (
-                self.habitat_config.navmesh_include_static_objects
-            )
+                self.habitat_config.navmesh_include_static_objects)
 
         sensor_specifications = []
         for sensor in _sensor_suite.sensors.values():
             assert isinstance(sensor, HabitatSimSensor)
-            sim_sensor_cfg = sensor._get_default_spec()  # type: ignore[operator]
+            sim_sensor_cfg = sensor._get_default_spec(
+            )  # type: ignore[operator]
             overwrite_config(
                 config_from=sensor.config,
                 config_to=sim_sensor_cfg,
@@ -188,56 +147,52 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
                 ignore_keys=sensor._config_ignore_keys,
                 # TODO consider making trans_dict a sensor class var too.
                 trans_dict={
-                    "sensor_model_type": lambda v: getattr(
-                        habitat_sim.FisheyeSensorModelType, v
-                    ),
-                    "sensor_subtype": lambda v: getattr(
-                        habitat_sim.SensorSubType, v
-                    ),
+                    "sensor_model_type":
+                    lambda v: getattr(habitat_sim.FisheyeSensorModelType, v),
+                    "sensor_subtype":
+                    lambda v: getattr(habitat_sim.SensorSubType, v),
                 },
             )
             sim_sensor_cfg.uuid = sensor.uuid
             sim_sensor_cfg.resolution = list(
-                sensor.observation_space.shape[:2]
-            )
+                sensor.observation_space.shape[:2])
 
             # TODO(maksymets): Add configure method to Sensor API to avoid
             # accessing child attributes through parent interface
             # We know that the Sensor has to be one of these Sensors
             sim_sensor_cfg.sensor_type = sensor.sim_sensor_type
             sim_sensor_cfg.gpu2gpu_transfer = (
-                self.habitat_config.habitat_sim_v0.gpu_gpu
-            )
+                self.habitat_config.habitat_sim_v0.gpu_gpu)
             sensor_specifications.append(sim_sensor_cfg)
 
         agent_config.sensor_specifications = sensor_specifications
 
         agent_config.action_space = {
-            0: habitat_sim.ActionSpec("stop"),
-            1: habitat_sim.ActionSpec(
+            0:
+            habitat_sim.ActionSpec("stop"),
+            1:
+            habitat_sim.ActionSpec(
                 "move_forward",
                 habitat_sim.ActuationSpec(
-                    amount=self.habitat_config.forward_step_size
-                ),
+                    amount=self.habitat_config.forward_step_size),
             ),
-            2: habitat_sim.ActionSpec(
+            2:
+            habitat_sim.ActionSpec(
                 "turn_left",
                 habitat_sim.ActuationSpec(
-                    amount=self.habitat_config.turn_angle
-                ),
+                    amount=self.habitat_config.turn_angle),
             ),
-            3: habitat_sim.ActionSpec(
+            3:
+            habitat_sim.ActionSpec(
                 "turn_right",
                 habitat_sim.ActuationSpec(
-                    amount=self.habitat_config.turn_angle
-                ),
+                    amount=self.habitat_config.turn_angle),
             ),
         }
 
         output = habitat_sim.Configuration(sim_config, [agent_config])
         output.enable_batch_renderer = (
-            self.habitat_config.renderer.enable_batch_renderer
-        )
+            self.habitat_config.renderer.enable_batch_renderer)
         return output
 
     @property
@@ -251,8 +206,7 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
     def _update_agents_state(self) -> bool:
         is_updated = False
         for agent_id, agent_name in enumerate(
-            self.habitat_config.agents_order
-        ):
+                self.habitat_config.agents_order):
             agent_cfg = self.habitat_config.agents[agent_name]
             if agent_cfg.is_set_start_state:
                 self.set_agent_state(
@@ -276,9 +230,8 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
         else:
             return self._sensor_suite.get_observations(sim_obs)
 
-    def step(
-        self, action: Optional[Union[str, np.ndarray, int]]
-    ) -> Observations:
+    def step(self, action: Optional[Union[str, np.ndarray,
+                                          int]]) -> Observations:
         if action is None:
             sim_obs = self.get_sensor_observations()
         else:
@@ -336,9 +289,8 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
     def geodesic_distance(
         self,
         position_a: Union[Sequence[float], np.ndarray],
-        position_b: Union[
-            Sequence[float], Sequence[Sequence[float]], np.ndarray
-        ],
+        position_b: Union[Sequence[float], Sequence[Sequence[float]],
+                          np.ndarray],
         episode: Optional[Episode] = None,
     ) -> float:
         if episode is None or episode._shortest_path_cache is None:
@@ -347,8 +299,7 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
                 path.requested_ends = np.array(position_b, dtype=np.float32)
             else:
                 path.requested_ends = np.array(
-                    [np.array(position_b, dtype=np.float32)]
-                )
+                    [np.array(position_b, dtype=np.float32)])
         else:
             path = episode._shortest_path_cache
 
@@ -367,20 +318,9 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
         targets: Sequence[AgentState],
         agent_id: int = 0,
     ) -> List[ShortestPathPoint]:
-        r"""
-        Returns:
-            List of agent states and actions along the shortest path from
-            source to the nearest target (both included). If one of the
-            target(s) is identical to the source, a list containing only
-            one node with the identical agent state is returned. Returns
-            an empty list in case none of the targets are reachable from
-            the source. For the last item in the returned list the action
-            will be None.
-        """
         raise NotImplementedError(
             "This function is no longer implemented. Please use the greedy "
-            "follower instead"
-        )
+            "follower instead")
 
     @property
     def up_vector(self) -> np.ndarray:
@@ -404,35 +344,6 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
         return self.pathfinder.is_navigable(point)
 
     def semantic_annotations(self):
-        r"""
-        Returns:
-            SemanticScene which is a three level hierarchy of semantic
-            annotations for the current scene. Specifically this method
-            returns a SemanticScene which contains a list of SemanticLevel's
-            where each SemanticLevel contains a list of SemanticRegion's where
-            each SemanticRegion contains a list of SemanticObject's.
-
-            SemanticScene has attributes: aabb(axis-aligned bounding box) which
-            has attributes aabb.center and aabb.sizes which are 3d vectors,
-            categories, levels, objects, regions.
-
-            SemanticLevel has attributes: id, aabb, objects and regions.
-
-            SemanticRegion has attributes: id, level, aabb, category (to get
-            name of category use category.name()) and objects.
-
-            SemanticObject has attributes: id, region, aabb, obb (oriented
-            bounding box) and category.
-
-            SemanticScene contains List[SemanticLevels]
-            SemanticLevel contains List[SemanticRegion]
-            SemanticRegion contains List[SemanticObject]
-
-            Example to loop through in a hierarchical fashion:
-            for level in semantic_scene.levels:
-                for region in level.regions:
-                    for obj in region.objects:
-        """
         return self.semantic_scene
 
     def get_agent_state(self, agent_id: int = 0) -> habitat_sim.AgentState:
@@ -445,23 +356,6 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
         agent_id: int = 0,
         reset_sensors: bool = True,
     ) -> bool:
-        r"""Sets agent state similar to initialize_agent, but without agents
-        creation. On failure to place the agent in the proper position, it is
-        moved back to its previous pose.
-
-        Args:
-            position: list containing 3 entries for (x, y, z).
-            rotation: list with 4 entries for (x, y, z, w) elements of unit
-                quaternion (versor) representing agent 3D orientation,
-                (https://en.wikipedia.org/wiki/Versor)
-            agent_id: int identification of agent from multiagent setup.
-            reset_sensors: bool for if sensor changes (e.g. tilt) should be
-                reset).
-
-        Returns:
-            True if the set was successful else moves the agent back to its
-            original pose and returns false.
-        """
         agent = self.get_agent(agent_id)
         new_state = self.get_agent(agent_id).get_state()
         new_state.position = position
@@ -486,9 +380,9 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
         if position is None or rotation is None:
             success = True
         else:
-            success = self.set_agent_state(
-                position, rotation, reset_sensors=False
-            )
+            success = self.set_agent_state(position,
+                                           rotation,
+                                           reset_sensors=False)
 
         if success:
             sim_obs = self.get_sensor_observations()
@@ -506,37 +400,20 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
         else:
             return None
 
-    def distance_to_closest_obstacle(
-        self, position: np.ndarray, max_search_radius: float = 2.0
-    ) -> float:
+    def distance_to_closest_obstacle(self,
+                                     position: np.ndarray,
+                                     max_search_radius: float = 2.0) -> float:
         return self.pathfinder.distance_to_closest_obstacle(
-            position, max_search_radius
-        )
+            position, max_search_radius)
 
     def island_radius(self, position: Sequence[float]) -> float:
         return self.pathfinder.island_radius(position)
 
     @property
     def previous_step_collided(self):
-        r"""Whether or not the previous step resulted in a collision
-
-        Returns:
-            bool: True if the previous step resulted in a collision, false otherwise
-
-        Warning:
-            This field is only updated when :meth:`step`, :meth:`reset`, or :meth:`get_observations_at` are
-            called.  It does not update when the agent is moved to a new location.  Furthermore, it
-            will _always_ be false after :meth:`reset` or :meth:`get_observations_at` as neither of those
-            result in an action (step) being taken.
-        """
         return self._prev_sim_obs.get("collided", False)
 
     def add_keyframe_to_observations(self, observations):
-        r"""Adds an item to observations that contains the latest gfx-replay keyframe.
-        This is used to communicate the state of concurrent simulators to the batch renderer between processes.
-
-        :param observations: Original observations upon which the keyframe is added.
-        """
         assert self.config.enable_batch_renderer
 
         assert KEYFRAME_OBSERVATION_KEY not in observations
@@ -549,6 +426,5 @@ class HabitatOctoSim(habitat_sim.Simulator, Simulator):
                 transform.translation,
                 rotation,
             )
-        observations[
-            KEYFRAME_OBSERVATION_KEY
-        ] = self.gfx_replay_manager.extract_keyframe()
+        observations[KEYFRAME_OBSERVATION_KEY] = (
+            self.gfx_replay_manager.extract_keyframe())

@@ -17,14 +17,14 @@ from habitat.core.registry import registry
 # Post that PR we would no longer need try register blocks.
 def _try_register_instanceimagenavdatasetv1():
     try:
-        from habitat.datasets.image_nav.instance_image_nav_dataset import (  # noqa: F401
-            InstanceImageNavDatasetV1,
-        )
+        from habitat.datasets.image_nav.instance_image_nav_dataset import \
+            InstanceImageNavDatasetV1  # noqa: F401
 
     except ImportError as e:
         pointnav_import_error = e
 
         @registry.register_dataset(name="InstanceImageNav-v1")
         class InstanceImageNavDatasetImportError(Dataset):
+
             def __init__(self, *args, **kwargs):
                 raise pointnav_import_error

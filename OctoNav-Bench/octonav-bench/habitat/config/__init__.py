@@ -4,8 +4,12 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-
-from habitat.config.default import DictConfig, get_config, get_config_and_task
+from habitat.config.default import get_config, get_config_and_task
 from habitat.config.read_write import read_write
 
-__all__ = ["get_config", "read_write", "default_structured_configs", "get_config_and_task"]
+__all__ = [
+    "get_config",
+    "read_write",
+    "default_structured_configs",
+    "get_config_and_task",
+]

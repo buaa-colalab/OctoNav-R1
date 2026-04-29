@@ -14,15 +14,13 @@ import importlib
 from typing import TYPE_CHECKING, Dict, Optional, Tuple, Type, Union
 
 import gym
-import numpy as np
-
 import habitat
+import numpy as np
 from habitat import Dataset
 from habitat.gym.gym_wrapper import HabGymWrapper
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
-
 
 RLTaskEnvObsType = Union[np.ndarray, Dict[str, np.ndarray]]
 
@@ -40,9 +38,10 @@ def get_env_class(env_name: str) -> Type[habitat.RLEnv]:
 
 
 class RLTaskEnv(habitat.RLEnv):
-    def __init__(
-        self, config: "DictConfig", dataset: Optional[Dataset] = None
-    ):
+
+    def __init__(self,
+                 config: "DictConfig",
+                 dataset: Optional[Dataset] = None):
         super().__init__(config, dataset)
         self._reward_measure_name = {}
         self._success_measure_name = {}
@@ -55,41 +54,41 @@ class RLTaskEnv(habitat.RLEnv):
             self._slack_reward[task_name] = task_config.slack_reward
             self._success_reward[task_name] = task_config.success_reward
             self._end_on_success[task_name] = task_config.end_on_success
-            assert (
-                self._reward_measure_name[task_name] is not None
-            ), "The key task.reward_measure cannot be None"
-            assert (
-                self._success_measure_name[task_name] is not None
-            ), "The key task.success_measure cannot be None"
-    
+            assert self._reward_measure_name[task_name] is not None, (
+                "The key task.reward_measure cannot be None")
+            assert self._success_measure_name[task_name] is not None, (
+                "The key task.success_measure cannot be None")
+
     @property
     def reward_measure_name(self) -> str:
         return self._reward_measure_name[self._env.current_task]
-    
+
     @property
     def success_measure_name(self) -> str:
         return self._success_measure_name[self._env.current_task]
-    
+
     @property
     def slack_reward(self) -> float:
         return self._slack_reward[self._env.current_task]
-    
+
     @property
     def success_reward(self) -> float:
         return self._success_reward[self._env.current_task]
-    
+
     @property
     def end_on_success(self) -> bool:
         return self._end_on_success[self._env.current_task]
 
     def reset(
-        self, *args, return_info: bool = False, **kwargs
+            self,
+            *args,
+            return_info: bool = False,
+            **kwargs
     ) -> Union[RLTaskEnvObsType, Tuple[RLTaskEnvObsType, Dict]]:
         return super().reset(*args, return_info=return_info, **kwargs)
 
-    def step(
-        self, *args, **kwargs
-    ) -> Tuple[RLTaskEnvObsType, float, bool, dict]:
+    def step(self, *args,
+             **kwargs) -> Tuple[RLTaskEnvObsType, float, bool, dict]:
         return super().step(*args, **kwargs)
 
     def get_reward_range(self):
@@ -115,7 +114,7 @@ class RLTaskEnv(habitat.RLEnv):
         if self._env.episode_over:
             done = True
         if self.end_on_success and self._episode_success():
-            done = True 
+            done = True
         return done
 
     def get_info(self, observations):
@@ -129,9 +128,9 @@ class GymRegistryEnv(gym.Wrapper):
     used with habitat-baselines
     """
 
-    def __init__(
-        self, config: "DictConfig", dataset: Optional[Dataset] = None
-    ):
+    def __init__(self,
+                 config: "DictConfig",
+                 dataset: Optional[Dataset] = None):
         for dependency in config["env_task_gym_dependencies"]:
             importlib.import_module(dependency)
         env_name = config["env_task_gym_id"]
@@ -146,9 +145,9 @@ class GymHabitatEnv(gym.Wrapper):
     to use the default gym API.
     """
 
-    def __init__(
-        self, config: "DictConfig", dataset: Optional[Dataset] = None
-    ):
+    def __init__(self,
+                 config: "DictConfig",
+                 dataset: Optional[Dataset] = None):
         base_env = RLTaskEnv(config=config, dataset=dataset)
         env = HabGymWrapper(env=base_env)
         super().__init__(env)

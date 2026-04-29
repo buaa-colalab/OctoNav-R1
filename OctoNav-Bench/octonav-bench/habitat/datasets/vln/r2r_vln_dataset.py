@@ -18,7 +18,6 @@ from habitat.tasks.vln.vln import InstructionData, VLNEpisode
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
-
 DEFAULT_SCENE_PATH_PREFIX = "data/scene_datasets/"
 
 
@@ -33,9 +32,8 @@ class VLNDatasetV1(Dataset):
 
     @staticmethod
     def check_config_paths_exist(config: "DictConfig") -> bool:
-        return os.path.exists(
-            config.data_path.format(split=config.split)
-        ) and os.path.exists(config.scenes_dir)
+        return os.path.exists(config.data_path.format(
+            split=config.split)) and os.path.exists(config.scenes_dir)
 
     def __init__(self, config: Optional["DictConfig"] = None) -> None:
         self.episodes = []
@@ -48,16 +46,14 @@ class VLNDatasetV1(Dataset):
             self.from_json(f.read(), scenes_dir=config.scenes_dir)
 
         self.episodes = list(
-            filter(self.build_content_scenes_filter(config), self.episodes)
-        )
+            filter(self.build_content_scenes_filter(config), self.episodes))
 
-    def from_json(
-        self, json_str: str, scenes_dir: Optional[str] = None
-    ) -> None:
+    def from_json(self,
+                  json_str: str,
+                  scenes_dir: Optional[str] = None) -> None:
         deserialized = json.loads(json_str)
         self.instruction_vocab = VocabDict(
-            word_list=deserialized["instruction_vocab"]["word_list"]
-        )
+            word_list=deserialized["instruction_vocab"]["word_list"])
 
         for episode in deserialized["episodes"]:
             episode = VLNEpisode(**episode)
@@ -65,8 +61,7 @@ class VLNDatasetV1(Dataset):
             if scenes_dir is not None:
                 if episode.scene_id.startswith(DEFAULT_SCENE_PATH_PREFIX):
                     episode.scene_id = episode.scene_id[
-                        len(DEFAULT_SCENE_PATH_PREFIX) :
-                    ]
+                        len(DEFAULT_SCENE_PATH_PREFIX):]
 
                 episode.scene_id = os.path.join(scenes_dir, episode.scene_id)
 

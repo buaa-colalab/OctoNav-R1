@@ -8,9 +8,10 @@ from habitat.core.logging import logger
 from habitat.core.registry import registry
 from habitat.datasets.image_nav import _try_register_instanceimagenavdatasetv1
 from habitat.datasets.object_nav import _try_register_objectnavdatasetv1
+from habitat.datasets.octonav import _try_register_octonavdatasetv1
 from habitat.datasets.pointnav import _try_register_pointnavdatasetv1
 from habitat.datasets.vln import _try_register_r2r_vln_dataset
-from habitat.datasets.octonav import _try_register_octonavdatasetv1
+
 
 def make_dataset(id_dataset, **kwargs):
     logger.info("Initializing dataset {}".format(id_dataset))

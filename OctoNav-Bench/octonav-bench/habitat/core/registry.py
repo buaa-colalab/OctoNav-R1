@@ -3,7 +3,6 @@
 # Copyright (c) Meta Platforms, Inc. and its affiliates.
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
-
 r"""Registry is central source of truth in Habitat.
 
 Taken from Pythia, it is inspired from Redux's concept of global store.
@@ -51,13 +50,13 @@ class Registry(metaclass=Singleton):
         name: Optional[str],
         assert_type: Optional[Type] = None,
     ) -> Callable:
+
         def wrap(to_register):
             if assert_type is not None:
                 assert issubclass(
-                    to_register, assert_type
-                ), "{} must be a subclass of {}".format(
-                    to_register, assert_type
-                )
+                    to_register,
+                    assert_type), ("{} must be a subclass of {}".format(
+                        to_register, assert_type))
             register_name = to_register.__name__ if name is None else name
 
             cls.mapping[_type][register_name] = to_register
@@ -93,14 +92,16 @@ class Registry(metaclass=Singleton):
 
         """
 
-        return cls._register_impl(
-            "task", to_register, name, assert_type=EmbodiedTask
-        )
+        return cls._register_impl("task",
+                                  to_register,
+                                  name,
+                                  assert_type=EmbodiedTask)
 
     @classmethod
-    def register_simulator(
-        cls, to_register: None = None, *, name: Optional[str] = None
-    ):
+    def register_simulator(cls,
+                           to_register: None = None,
+                           *,
+                           name: Optional[str] = None):
         r"""Register a simulator to registry with key :p:`name`
 
         :param name: Key with which the simulator will be registered.
@@ -124,9 +125,10 @@ class Registry(metaclass=Singleton):
 
         """
 
-        return cls._register_impl(
-            "sim", to_register, name, assert_type=Simulator
-        )
+        return cls._register_impl("sim",
+                                  to_register,
+                                  name,
+                                  assert_type=Simulator)
 
     @classmethod
     def register_sensor(cls, to_register=None, *, name: Optional[str] = None):
@@ -136,9 +138,10 @@ class Registry(metaclass=Singleton):
             If :py:`None` will use the name of the class
         """
 
-        return cls._register_impl(
-            "sensor", to_register, name, assert_type=Sensor
-        )
+        return cls._register_impl("sensor",
+                                  to_register,
+                                  name,
+                                  assert_type=Sensor)
 
     @classmethod
     def register_measure(cls, to_register=None, *, name: Optional[str] = None):
@@ -148,14 +151,16 @@ class Registry(metaclass=Singleton):
             If :py:`None` will use the name of the class
         """
 
-        return cls._register_impl(
-            "measure", to_register, name, assert_type=Measure
-        )
+        return cls._register_impl("measure",
+                                  to_register,
+                                  name,
+                                  assert_type=Measure)
 
     @classmethod
-    def register_task_action(
-        cls, to_register=None, *, name: Optional[str] = None
-    ):
+    def register_task_action(cls,
+                             to_register=None,
+                             *,
+                             name: Optional[str] = None):
         r"""Add a task action in this registry under key 'name'
 
         :param action_space: An action space that describes parameters to the
@@ -165,9 +170,10 @@ class Registry(metaclass=Singleton):
             :py:`None` will use the name of the task action's method.
         """
 
-        return cls._register_impl(
-            "task_action", to_register, name, assert_type=Action
-        )
+        return cls._register_impl("task_action",
+                                  to_register,
+                                  name,
+                                  assert_type=Action)
 
     @classmethod
     def register_dataset(cls, to_register=None, *, name: Optional[str] = None):
@@ -177,9 +183,10 @@ class Registry(metaclass=Singleton):
             If :py:`None` will use the name of the class
         """
 
-        return cls._register_impl(
-            "dataset", to_register, name, assert_type=Dataset
-        )
+        return cls._register_impl("dataset",
+                                  to_register,
+                                  name,
+                                  assert_type=Dataset)
 
     @classmethod
     def register_env(cls, to_register=None, *, name: Optional[str] = None):

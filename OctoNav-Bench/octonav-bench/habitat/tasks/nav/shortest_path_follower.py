@@ -7,9 +7,8 @@
 import warnings
 from typing import TYPE_CHECKING, List, Optional, Union
 
-import numpy as np
-
 import habitat_sim
+import numpy as np
 from habitat.sims.habitat_simulator.actions import HabitatSimActions
 
 if TYPE_CHECKING:

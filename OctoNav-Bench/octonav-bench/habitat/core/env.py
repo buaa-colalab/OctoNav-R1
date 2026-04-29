@@ -6,23 +6,13 @@
 
 import random
 import time
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import (TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple,
+                    Union, cast)
 
 import gym
 import numba
 import numpy as np
 from gym import spaces
-
 from habitat.config import read_write
 from habitat.core.dataset import BaseEpisode, Dataset, Episode, EpisodeIterator
 from habitat.core.embodied_task import EmbodiedTask, Metrics
@@ -67,9 +57,9 @@ class Env:
     _episode_from_iter_on_reset: bool
     _episode_force_changed: bool
 
-    def __init__(
-        self, config: "DictConfig", dataset: Optional[Dataset[Episode]] = None
-    ) -> None:
+    def __init__(self,
+                 config: "DictConfig",
+                 dataset: Optional[Dataset[Episode]] = None) -> None:
         """Constructor
 
         :param config: config for the environment. Should contain id for
@@ -85,9 +75,8 @@ class Env:
         self._config = config
         self._dataset = dataset
         if self._dataset is None and config.dataset.type:
-            self._dataset = make_dataset(
-                id_dataset=config.dataset.type, config=config.dataset
-            )
+            self._dataset = make_dataset(id_dataset=config.dataset.type,
+                                         config=config.dataset)
 
         self._current_episode = None
         self._episode_iterator = None
@@ -96,15 +85,13 @@ class Env:
 
         # load the first scene if dataset is present
         if self._dataset:
-            assert (
-                len(self._dataset.episodes) > 0
-            ), "dataset should have non-empty episodes list"
+            assert len(self._dataset.episodes) > 0, (
+                "dataset should have non-empty episodes list")
             self._setup_episode_iterator()
             self.current_episode = next(self.episode_iterator)
             with read_write(self._config):
                 self._config.simulator.scene_dataset = (
-                    self.current_episode.scene_dataset_config
-                )
+                    self.current_episode.scene_dataset_config)
                 self._config.simulator.scene = self.current_episode.scene_id
 
             self.number_of_episodes = len(self.episodes)
@@ -112,7 +99,9 @@ class Env:
             self.number_of_episodes = None
 
         self._sim = make_sim(
-            id_sim=self._config.simulator.type, config=self._config.simulator, current_episode=self.current_episode
+            id_sim=self._config.simulator.type,
+            config=self._config.simulator,
+            current_episode=self.current_episode,
         )
         self._task = {}
         for task_name, task_config in self._config.tasks.items():
@@ -125,8 +114,7 @@ class Env:
             self._task[task_name] = cur_task
 
         self._max_episode_seconds = (
-            self._config.environment.max_episode_seconds
-        )
+            self._config.environment.max_episode_seconds)
         self._max_episode_steps = self._config.environment.max_episode_steps
         self._elapsed_steps = 0
         self._episode_start_time: Optional[float] = None
@@ -141,8 +129,7 @@ class Env:
         iter_option_dict["seed"] = self._config.seed
 
         self._episode_iterator = self._dataset.get_episode_iterator(
-            **iter_option_dict
-        )
+            **iter_option_dict)
 
     @property
     def current_episode(self) -> Episode:
@@ -169,20 +156,15 @@ class Env:
 
     @property
     def episodes(self) -> List[Episode]:
-        return (
-            self._dataset.episodes
-            if self._dataset
-            else cast(List[Episode], [])
-        )
+        return (self._dataset.episodes if self._dataset else cast(
+            List[Episode], []))
 
     @episodes.setter
     def episodes(self, episodes: List[Episode]) -> None:
-        assert (
-            len(episodes) > 0
-        ), "Environment doesn't accept empty episodes list."
-        assert (
-            self._dataset is not None
-        ), "Environment must have a dataset to set episodes"
+        assert len(episodes) > 0, (
+            "Environment doesn't accept empty episodes list.")
+        assert self._dataset is not None, (
+            "Environment must have a dataset to set episodes")
         self._dataset.episodes = episodes
         self._setup_episode_iterator()
         self._current_episode = None
@@ -200,7 +182,7 @@ class Env:
     @property
     def episode_over(self) -> bool:
         return self._episode_over
-    
+
     @property
     def current_task(self) -> str:
         return self.current_episode.task_name
@@ -211,25 +193,24 @@ class Env:
 
     @property
     def _elapsed_seconds(self) -> float:
-        assert (
-            self._episode_start_time
-        ), "Elapsed seconds requested before episode was started."
+        assert self._episode_start_time, (
+            "Elapsed seconds requested before episode was started.")
         return time.time() - self._episode_start_time
 
     def get_metrics(self) -> Metrics:
-        if self.current_episode.task_name == 'OctoNav':
+        if self.current_episode.task_name == "OctoNav":
             return self.task.get_multi_metrics()
         else:
-            return {self.current_episode.task_name: self.task.measurements.get_metrics()}
+            return {
+                self.current_episode.task_name:
+                self.task.measurements.get_metrics()
+            }
 
     def _past_limit(self) -> bool:
-        return (
-            self._max_episode_steps != 0
-            and self._max_episode_steps <= self._elapsed_steps
-        ) or (
-            self._max_episode_seconds != 0
-            and self._max_episode_seconds <= self._elapsed_seconds
-        )
+        return (self._max_episode_steps != 0
+                and self._max_episode_steps <= self._elapsed_steps) or (
+                    self._max_episode_seconds != 0
+                    and self._max_episode_seconds <= self._elapsed_seconds)
 
     def _reset_stats(self) -> None:
         self._episode_start_time = time.time()
@@ -249,11 +230,8 @@ class Env:
         if self._current_episode is not None:
             self._current_episode._shortest_path_cache = None
 
-        if (
-            self._episode_iterator is not None
-            and self._episode_from_iter_on_reset
-            and next_episode
-        ):
+        if (self._episode_iterator is not None
+                and self._episode_from_iter_on_reset and next_episode):
             self._current_episode = next(self._episode_iterator)
 
         # This is always set to true after a reset that way
@@ -280,13 +258,11 @@ class Env:
             self._episode_over = True
 
         if self.episode_iterator is not None and isinstance(
-            self.episode_iterator, EpisodeIterator
-        ):
+                self.episode_iterator, EpisodeIterator):
             self.episode_iterator.step_taken()
 
-    def step(
-        self, action: Union[int, str, Dict[str, Any]], **kwargs
-    ) -> Observations:
+    def step(self, action: Union[int, str, Dict[str, Any]],
+             **kwargs) -> Observations:
         r"""Perform an action in the environment and return observations.
 
         :param action: action (belonging to :ref:`action_space`) to be
@@ -297,23 +273,21 @@ class Env:
         :return: observations after taking action in environment.
         """
 
-        assert (
-            self._episode_start_time is not None
-        ), "Cannot call step before calling reset"
-        assert (
-            self._episode_over is False
-        ), "Episode over, call reset before calling step"
-        assert (
-            not self._episode_force_changed
-        ), "Episode was changed either by setting current_episode or changing the episodes list. Call reset before stepping the environment again."
+        assert self._episode_start_time is not None, (
+            "Cannot call step before calling reset")
+        assert self._episode_over is False, (
+            "Episode over, call reset before calling step")
+        assert not self._episode_force_changed, (
+            "Episode was changed either by setting current_episode \
+or changing the episodes list. Call reset before stepping the environment \
+again.")
 
         # Support simpler interface as well
         if isinstance(action, (str, int, np.integer)):
             action = {"action": action}
 
-        observations = self.task.step(
-            action=action, episode=self.current_episode
-        )
+        observations = self.task.step(action=action,
+                                      episode=self.current_episode)
 
         self.task.measurements.update_measures(
             episode=self.current_episode,
@@ -341,9 +315,8 @@ class Env:
             task.seed(seed)
 
     def reconfigure(self, config: "DictConfig") -> None:
-        self._config = self.task.overwrite_sim_config(
-            config, self.current_episode
-        )
+        self._config = self.task.overwrite_sim_config(config,
+                                                      self.current_episode)
 
         self._sim.reconfigure(self._config.simulator, self.current_episode)
 
@@ -361,7 +334,8 @@ class Env:
 
 
 class RLEnv(gym.Env):
-    r"""Reinforcement Learning (RL) environment class which subclasses ``gym.Env``.
+    r"""Reinforcement Learning (RL) environment class which
+    subclasses ``gym.Env``.
 
     This is a wrapper over :ref:`Env` for RL users. To create custom RL
     environments users should subclass `RLEnv` and define the following
@@ -374,9 +348,9 @@ class RLEnv(gym.Env):
 
     _env: Env
 
-    def __init__(
-        self, config: "DictConfig", dataset: Optional[Dataset] = None
-    ) -> None:
+    def __init__(self,
+                 config: "DictConfig",
+                 dataset: Optional[Dataset] = None) -> None:
         """Constructor
 
         :param config: config to construct :ref:`Env`
@@ -424,9 +398,10 @@ class RLEnv(gym.Env):
             )
 
     @profiling_wrapper.RangeContext("RLEnv.reset")
-    def reset(
-        self, *, return_info: bool = False, **kwargs
-    ) -> Union[Observations, Tuple[Observations, Dict]]:
+    def reset(self,
+              *,
+              return_info: bool = False,
+              **kwargs) -> Union[Observations, Tuple[Observations, Dict]]:
         observations = self._env.reset()
         if return_info:
             return observations, self.get_info(observations)

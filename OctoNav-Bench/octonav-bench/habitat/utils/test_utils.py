@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 from gym import spaces
-
 from habitat.tasks.nav.nav import StopAction
 
 

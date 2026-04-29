@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Meta Platforms, Inc. and its affiliates.
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
 import json
 import os
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
@@ -12,15 +8,10 @@ from habitat.core.registry import registry
 from habitat.core.simulator import AgentState, ShortestPathPoint
 from habitat.core.utils import DatasetFloatJSONEncoder
 from habitat.datasets.pointnav.pointnav_dataset import (
-    CONTENT_SCENES_PATH_FIELD,
-    DEFAULT_SCENE_PATH_PREFIX,
-    PointNavDatasetV1,
-)
-from habitat.tasks.nav.object_nav_task import (
-    ObjectGoal,
-    ObjectGoalNavEpisode,
-    ObjectViewLocation,
-)
+    CONTENT_SCENES_PATH_FIELD, DEFAULT_SCENE_PATH_PREFIX, PointNavDatasetV1)
+from habitat.tasks.nav.object_nav_task import (ObjectGoal,
+                                               ObjectGoalNavEpisode,
+                                               ObjectViewLocation)
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
@@ -28,7 +19,6 @@ if TYPE_CHECKING:
 
 @registry.register_dataset(name="ObjectNav-v1")
 class ObjectNavDatasetV1(PointNavDatasetV1):
-    r"""Class inherited from PointNavDataset that loads Object Navigation dataset."""
     category_to_task_category_id: Dict[str, int]
     category_to_scene_annotation_category_id: Dict[str, int]
     episodes: List[ObjectGoalNavEpisode] = []  # type: ignore
@@ -43,8 +33,7 @@ class ObjectNavDatasetV1(PointNavDatasetV1):
         goals_by_category = {}
         for i, ep in enumerate(dataset["episodes"]):
             dataset["episodes"][i]["object_category"] = ep["goals"][0][
-                "object_category"
-            ]
+                "object_category"]
             ep = ObjectGoalNavEpisode(**ep)
 
             goals_key = ep.goals_key
@@ -82,40 +71,37 @@ class ObjectNavDatasetV1(PointNavDatasetV1):
 
         for vidx, view in enumerate(g.view_points):
             view_location = ObjectViewLocation(**view)  # type: ignore
-            view_location.agent_state = AgentState(**view_location.agent_state)  # type: ignore
+            view_location.agent_state = AgentState(
+                **view_location.agent_state)  # type: ignore
             g.view_points[vidx] = view_location
 
         return g
 
-    def from_json(
-        self, json_str: str, scenes_dir: Optional[str] = None
-    ) -> None:
+    def from_json(self,
+                  json_str: str,
+                  scenes_dir: Optional[str] = None) -> None:
         deserialized = json.loads(json_str)
         if CONTENT_SCENES_PATH_FIELD in deserialized:
             self.content_scenes_path = deserialized[CONTENT_SCENES_PATH_FIELD]
 
         if "category_to_task_category_id" in deserialized:
             self.category_to_task_category_id = deserialized[
-                "category_to_task_category_id"
-            ]
+                "category_to_task_category_id"]
 
         if "category_to_scene_annotation_category_id" in deserialized:
             self.category_to_scene_annotation_category_id = deserialized[
-                "category_to_scene_annotation_category_id"
-            ]
+                "category_to_scene_annotation_category_id"]
 
         if "category_to_mp3d_category_id" in deserialized:
             self.category_to_scene_annotation_category_id = deserialized[
-                "category_to_mp3d_category_id"
-            ]
+                "category_to_mp3d_category_id"]
 
         assert len(self.category_to_task_category_id) == len(
-            self.category_to_scene_annotation_category_id
-        )
+            self.category_to_scene_annotation_category_id)
 
         assert set(self.category_to_task_category_id.keys()) == set(
-            self.category_to_scene_annotation_category_id.keys()
-        ), "category_to_task and category_to_mp3d must have the same keys"
+            self.category_to_scene_annotation_category_id.keys(
+            )), "category_to_task and category_to_mp3d must have the same keys"
 
         if len(deserialized["episodes"]) == 0:
             return
@@ -133,8 +119,7 @@ class ObjectNavDatasetV1(PointNavDatasetV1):
             if scenes_dir is not None:
                 if episode.scene_id.startswith(DEFAULT_SCENE_PATH_PREFIX):
                     episode.scene_id = episode.scene_id[
-                        len(DEFAULT_SCENE_PATH_PREFIX) :
-                    ]
+                        len(DEFAULT_SCENE_PATH_PREFIX):]
 
                 episode.scene_id = os.path.join(scenes_dir, episode.scene_id)
 

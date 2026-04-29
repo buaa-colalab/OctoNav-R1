@@ -6,15 +6,15 @@
 
 from habitat.core.logging import logger
 from habitat.core.registry import registry
-from habitat.sims.habitat_simulator import _try_register_habitat_sim, _try_register_habitat_octo_sim
+from habitat.sims.habitat_simulator import (_try_register_habitat_octo_sim,
+                                            _try_register_habitat_sim)
 
 
 def make_sim(id_sim, **kwargs):
     logger.info("initializing sim {}".format(id_sim))
     _sim = registry.get_simulator(id_sim)
     assert _sim is not None, "Could not find simulator with name {}".format(
-        id_sim
-    )
+        id_sim)
     return _sim(**kwargs)
 
 

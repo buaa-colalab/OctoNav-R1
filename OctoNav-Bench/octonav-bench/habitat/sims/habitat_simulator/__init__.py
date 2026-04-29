@@ -4,9 +4,6 @@
 
 from habitat.core.registry import registry
 from habitat.core.simulator import Simulator
-from habitat.sims.habitat_simulator.object_state_machine import (
-    ObjectStateMachine,
-)
 
 
 def _try_register_habitat_sim():
@@ -22,13 +19,15 @@ def _try_register_habitat_sim():
 
         @registry.register_simulator(name="Sim-v0")
         class HabitatSimImportError(Simulator):
+
             def __init__(self, *args, **kwargs):
                 raise habitat_sim_import_error
 
 
 def _try_register_habitat_octo_sim():
     try:
-        from habitat.sims.habitat_simulator.habitat_octo_simulator import HabitatOctoSim  # noqa: F401
+        from habitat.sims.habitat_simulator.habitat_octo_simulator import \
+            HabitatOctoSim  # noqa: F401
 
         has_habitat_sim = True
     except ImportError as e:
@@ -39,5 +38,6 @@ def _try_register_habitat_octo_sim():
 
         @registry.register_simulator(name="OctoSim-v0")
         class HabitatOctoSimImportError(Simulator):
+
             def __init__(self, *args, **kwargs):
                 raise habitat_sim_import_error

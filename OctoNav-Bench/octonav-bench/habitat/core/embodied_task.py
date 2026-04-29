@@ -12,11 +12,10 @@ from collections import OrderedDict
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
 
 import numpy as np
-from omegaconf import OmegaConf
-
 from habitat.core.dataset import Dataset, Episode
 from habitat.core.simulator import Observations, SensorSuite, Simulator
 from habitat.core.spaces import ActionSpace, EmptySpace, Space
+from omegaconf import OmegaConf
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
@@ -62,9 +61,8 @@ class SimulatorTaskAction(Action):
     An ``EmbodiedTask`` action that is wrapping simulator action.
     """
 
-    def __init__(
-        self, *args: Any, config: "DictConfig", sim: Simulator, **kwargs: Any
-    ) -> None:
+    def __init__(self, *args: Any, config: "DictConfig", sim: Simulator,
+                 **kwargs: Any) -> None:
         self._config = config
         self._sim = sim
 
@@ -135,9 +133,8 @@ class Metrics(dict):
         :param measures: list of :ref:`Measure` whose metrics are fetched and
             packaged.
         """
-        data = [
-            (uuid, measure.get_metric()) for uuid, measure in measures.items()
-        ]
+        data = [(uuid, measure.get_metric())
+                for uuid, measure in measures.items()]
         super().__init__(data)
 
 
@@ -156,9 +153,8 @@ class Measurements:
         """
         self.measures = OrderedDict()
         for measure in measures:
-            assert (
-                measure.uuid not in self.measures
-            ), "'{}' is duplicated measure uuid".format(measure.uuid)
+            assert measure.uuid not in self.measures, (
+                "'{}' is duplicated measure uuid".format(measure.uuid))
             self.measures[measure.uuid] = measure
 
     def reset_measures(self, *args: Any, **kwargs: Any) -> None:
@@ -181,10 +177,10 @@ class Measurements:
     def _get_measure_index(self, measure_name):
         return list(self.measures.keys()).index(measure_name)
 
-    def check_measure_dependencies(
-        self, measure_name: str, dependencies: List[str]
-    ):
-        r"""Checks if dependencies measures are enabled and calculatethat the measure
+    def check_measure_dependencies(self, measure_name: str,
+                                   dependencies: List[str]):
+        r"""Checks if dependencies measures are enabled and calculatethat
+        the measure
         :param measure_name: a name of the measure for which has dependencies.
         :param dependencies: a list of a measure names that are required by
         the measure.
@@ -192,15 +188,14 @@ class Measurements:
         """
         measure_index = self._get_measure_index(measure_name)
         for dependency_measure in dependencies:
-            assert (
-                dependency_measure in self.measures
-            ), f"""{measure_name} measure requires {dependency_measure}
+            assert (dependency_measure in self.measures
+                    ), f"""{measure_name} measure requires {dependency_measure}
                 listed in the measures list in the config."""
 
         for dependency_measure in dependencies:
-            assert measure_index > self._get_measure_index(
-                dependency_measure
-            ), f"""{measure_name} measure requires be listed after {dependency_measure}
+            assert (measure_index > self._get_measure_index(dependency_measure)
+                    ), f"""{measure_name} measure requires be listed \
+after {dependency_measure}
                 in the measures list in the config."""
 
 
@@ -242,23 +237,20 @@ class EmbodiedTask:
         self._sim = sim
         self._dataset = dataset
         self._physics_target_sps = config.physics_target_sps
-        assert (
-            self._physics_target_sps > 0
-        ), "physics_target_sps must be positive"
+        assert self._physics_target_sps > 0, (
+            "physics_target_sps must be positive")
 
         self.measurements = Measurements(
             self._init_entities(
                 entities_configs=config.measurements,
                 register_func=registry.get_measure,
-            ).values()
-        )
+            ).values())
 
         self.sensor_suite = SensorSuite(
             self._init_entities(
                 entities_configs=config.lab_sensors,
                 register_func=registry.get_sensor,
-            ).values()
-        )
+            ).values())
 
         self.actions = self._init_entities(
             entities_configs=config.actions,
@@ -279,9 +271,8 @@ class EmbodiedTask:
             if "type" not in entity_cfg:
                 raise ValueError(f"Could not find type in {entity_cfg}")
             entity_type = register_func(entity_cfg.type)
-            assert (
-                entity_type is not None
-            ), f"invalid {entity_name} type {entity_cfg.type}"
+            assert entity_type is not None, (
+                f"invalid {entity_name} type {entity_cfg.type}")
             entities[entity_name] = entity_type(
                 sim=self._sim,
                 config=entity_cfg,
@@ -299,8 +290,7 @@ class EmbodiedTask:
                 episode=episode,
                 task=self,
                 should_time=True,
-            )
-        )
+            ))
 
         for action_instance in self.actions.values():
             action_instance.reset(episode=episode, task=self)
@@ -317,9 +307,8 @@ class EmbodiedTask:
     ):
         if isinstance(action_name, (int, np.integer)):
             action_name = self.get_action_name(action_name)
-        assert (
-            action_name in self.actions
-        ), f"Can't find '{action_name}' action in {self.actions.keys()}."
+        assert action_name in self.actions, (
+            f"Can't find '{action_name}' action in {self.actions.keys()}.")
         task_action = self.actions[action_name]
         return task_action.step(
             **action["action_args"],
@@ -339,9 +328,8 @@ class EmbodiedTask:
                     episode,
                 )
         else:
-            observations = self._step_single_action(
-                action_name, action, episode
-            )
+            observations = self._step_single_action(action_name, action,
+                                                    episode)
 
         self._sim.step_physics(1.0 / self._physics_target_sps)  # type:ignore
 
@@ -355,11 +343,9 @@ class EmbodiedTask:
                 action=action,
                 task=self,
                 should_time=True,
-            )
-        )
+            ))
         self._is_episode_active = self._check_episode_is_active(
-            observations=observations, action=action, episode=episode
-        )
+            observations=observations, action=action, episode=episode)
         return observations
 
     def get_action_name(self, action_index: Union[int, np.integer]):
@@ -369,16 +355,13 @@ class EmbodiedTask:
 
     @property
     def action_space(self) -> Space:
-        return ActionSpace(
-            {
-                action_name: action_instance.action_space
-                for action_name, action_instance in self.actions.items()
-            }
-        )
+        return ActionSpace({
+            action_name: action_instance.action_space
+            for action_name, action_instance in self.actions.items()
+        })
 
-    def overwrite_sim_config(
-        self, sim_config: "DictConfig", episode: Episode
-    ) -> "DictConfig":
+    def overwrite_sim_config(self, sim_config: "DictConfig",
+                             episode: Episode) -> "DictConfig":
         r"""Update config merging information from :p:`sim_config` and
         :p:`episode`.
 

@@ -16,7 +16,7 @@ defaults:
   - lab_sensors:
     - octonav_instruction_sensor
   - _self_
-  
+
 actions:
   look_up:
     tilt_angle: 30

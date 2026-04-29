@@ -10,28 +10,14 @@ from multiprocessing.connection import Connection
 from multiprocessing.context import BaseContext
 from queue import Queue
 from threading import Thread
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    OrderedDict,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterator, List,
+                    Optional, OrderedDict, Sequence, Set, Tuple, Union, cast)
 
 import attr
 import gym
+import habitat
 import numpy as np
 from gym import spaces
-
-import habitat
 from habitat.core.batch_rendering.env_batch_renderer import EnvBatchRenderer
 from habitat.core.env import Env, RLEnv
 from habitat.core.logging import logger
@@ -39,10 +25,8 @@ from habitat.core.utils import tile_images
 from habitat.gym.gym_env_episode_count_wrapper import EnvCountEpisodeWrapper
 from habitat.gym.gym_env_obs_dict_wrapper import EnvObsDictWrapper
 from habitat.utils import profiling_wrapper
-from habitat.utils.pickle5_multiprocessing import (
-    CloudpickleWrapper,
-    ConnectionWrapper,
-)
+from habitat.utils.pickle5_multiprocessing import (CloudpickleWrapper,
+                                                   ConnectionWrapper)
 
 try:
     # Use torch.multiprocessing if we can.
@@ -57,7 +41,6 @@ except ImportError:
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
-
 
 STEP_COMMAND = "step"
 RESET_COMMAND = "reset"
@@ -97,16 +80,15 @@ class _ReadWrapper:
     r"""Convenience wrapper to track if a connection to a worker process
     should have something to read.
     """
+
     read_fn: Callable[[], Any]
     rank: int
     is_waiting: bool = False
 
     def __call__(self) -> Any:
         if not self.is_waiting:
-            raise RuntimeError(
-                f"Tried to read from process {self.rank}"
-                " but there is nothing waiting to be read"
-            )
+            raise RuntimeError(f"Tried to read from process {self.rank}"
+                               " but there is nothing waiting to be read")
         res = self.read_fn()
         self.is_waiting = False
 
@@ -119,6 +101,7 @@ class _WriteWrapper:
     can be written to safely.  In other words, checks to make sure the
     result returned from the last write was read.
     """
+
     write_fn: Callable[[Any], None]
     read_wrapper: _ReadWrapper
 
@@ -126,8 +109,7 @@ class _WriteWrapper:
         if self.read_wrapper.is_waiting:
             raise RuntimeError(
                 f"Tried to write to process {self.read_wrapper.rank}"
-                " but the last write has not been read"
-            )
+                " but the last write has not been read")
         self.write_fn(data)
         self.read_wrapper.is_waiting = True
 
@@ -160,34 +142,16 @@ class VectorEnv:
         multiprocessing_start_method: str = "forkserver",
         workers_ignore_signals: bool = False,
     ) -> None:
-        """..
-
-        :param make_env_fn: function which creates a single environment. An
-            environment can be of type :ref:`env.Env` or :ref:`env.RLEnv`
-        :param env_fn_args: tuple of tuple of args to pass to the
-            :ref:`make_gym_from_config`.
-        :param auto_reset_done: automatically reset the environment when
-            done. This functionality is provided for seamless training
-            of vectorized environments.
-        :param multiprocessing_start_method: the multiprocessing method used to
-            spawn worker processes. Valid methods are
-            :py:`{'spawn', 'forkserver', 'fork'}`; :py:`'forkserver'` is the
-            recommended method as it works well with CUDA. If :py:`'fork'` is
-            used, the subproccess  must be started before any other GPU usage.
-        :param workers_ignore_signals: Whether or not workers will ignore SIGINT and SIGTERM
-            and instead will only exit when :ref:`close` is called
-        """
         self._is_closed = True
 
-        assert (
-            env_fn_args is not None and len(env_fn_args) > 0
-        ), "number of environments to be created should be greater than 0"
+        assert env_fn_args is not None and len(env_fn_args) > 0, (
+            "number of environments to be created should be greater than 0")
 
         self._num_envs = len(env_fn_args)
 
         assert multiprocessing_start_method in self._valid_start_methods, (
-            "multiprocessing_start_method must be one of {}. Got '{}'"
-        ).format(self._valid_start_methods, multiprocessing_start_method)
+            "multiprocessing_start_method must be one of {}. Got '{}'").format(
+                self._valid_start_methods, multiprocessing_start_method)
         self._auto_reset_done = auto_reset_done
         self._mp_ctx = mp.get_context(multiprocessing_start_method)
         self._workers = []
@@ -242,7 +206,6 @@ class VectorEnv:
         child_pipe: Optional[Connection] = None,
         parent_pipe: Optional[Connection] = None,
     ) -> None:
-        r"""process worker for creating and interacting with the environment."""
         if mask_signals:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
@@ -307,15 +270,12 @@ class VectorEnv:
         workers_ignore_signals: bool = False,
     ) -> Tuple[List[_ReadWrapper], List[_WriteWrapper]]:
         parent_connections, worker_connections = zip(
-            *[
-                [ConnectionWrapper(c) for c in self._mp_ctx.Pipe(duplex=True)]
-                for _ in range(self._num_envs)
-            ]
-        )
+            *[[ConnectionWrapper(c) for c in self._mp_ctx.Pipe(duplex=True)]
+              for _ in range(self._num_envs)])
         self._workers = []
-        for worker_conn, parent_conn, env_args in zip(
-            worker_connections, parent_connections, env_fn_args
-        ):
+        for worker_conn, parent_conn, env_args in zip(worker_connections,
+                                                      parent_connections,
+                                                      env_fn_args):
             ps = self._mp_ctx.Process(  # type: ignore[attr-defined]
                 target=self._worker_env,
                 args=(
@@ -399,9 +359,8 @@ class VectorEnv:
         results = [self._connection_read_fns[index_env]()]
         return results
 
-    def async_step_at(
-        self, index_env: int, action: Union[int, np.ndarray]
-    ) -> None:
+    def async_step_at(self, index_env: int, action: Union[int,
+                                                          np.ndarray]) -> None:
         self._warn_cuda_tensors(action)
         self._connection_write_fns[index_env]((STEP_COMMAND, action))
 
@@ -480,7 +439,7 @@ class VectorEnv:
 
         self._is_closed = True
 
-        if self._batch_renderer != None:
+        if self._batch_renderer is not None:
             self._batch_renderer.close()
 
     def pause_at(self, index: int) -> None:
@@ -514,17 +473,8 @@ class VectorEnv:
         function_name: str,
         function_args: Optional[Dict[str, Any]] = None,
     ) -> Any:
-        r"""Calls a function or retrieves a property/member variable (which is passed by name)
-        on the selected env and returns the result.
-
-        :param index: which env to call the function on.
-        :param function_name: the name of the function to call or property to retrieve on the env.
-        :param function_args: optional function args.
-        :return: result of calling the function.
-        """
         self._connection_write_fns[index](
-            (CALL_COMMAND, (function_name, function_args))
-        )
+            (CALL_COMMAND, (function_name, function_args)))
         result = self._connection_read_fns[index]()
         return result
 
@@ -546,26 +496,27 @@ class VectorEnv:
             function_args_list = [None] * len(function_names)
         assert len(function_names) == len(function_args_list)
         func_args = zip(function_names, function_args_list)
-        for write_fn, func_args_on in zip(
-            self._connection_write_fns, func_args
-        ):
+        for write_fn, func_args_on in zip(self._connection_write_fns,
+                                          func_args):
             write_fn((CALL_COMMAND, func_args_on))
         results = []
         for read_fn in self._connection_read_fns:
             results.append(read_fn())
         return results
 
-    def render(
-        self, mode: str = "human", *args, **kwargs
-    ) -> Optional[np.ndarray]:
+    def render(self,
+               mode: str = "human",
+               *args,
+               **kwargs) -> Optional[np.ndarray]:
         r"""Render observations from all environments in a tiled image."""
         if self._batch_renderer is not None:
             images = self._batch_renderer.copy_output_to_image()
         else:
             for write_fn in self._connection_write_fns:
-                write_fn(
-                    (RENDER_COMMAND, (args, {"mode": "rgb_array", **kwargs}))
-                )
+                write_fn((RENDER_COMMAND, (args, {
+                    "mode": "rgb_array",
+                    **kwargs
+                })))
             images = [read_fn() for read_fn in self._connection_read_fns]
         tile = tile_images(images)
         if mode == "human":
@@ -603,11 +554,10 @@ class VectorEnv:
                 subk = f"{prefix}.{k}" if prefix is not None else k
                 self._warn_cuda_tensors(v, prefix=subk)
         elif isinstance(action, torch.Tensor) and action.device.type == "cuda":
-            warnings.warn(
-                f"Action with key {subk} is a CUDA tensor."
-                "  This will result in a CUDA context in the subproccess worker."
-                "  Using CPU tensors instead is recommended."
-            )
+            warnings.warn(f"Action with key {subk} is a CUDA tensor."
+                          "  This will result in a CUDA context "
+                          "in the subproccess worker."
+                          "  Using CPU tensors instead is recommended.")
 
     def __del__(self):
         self.close()
@@ -635,14 +585,13 @@ class ThreadedVectorEnv(VectorEnv):
         make_env_fn: Callable[..., Env] = _make_env_fn,
         workers_ignore_signals: bool = False,
     ) -> Tuple[List[_ReadWrapper], List[_WriteWrapper]]:
-        queues: Iterator[Tuple[Any, ...]] = zip(
-            *[(Queue(), Queue()) for _ in range(self._num_envs)]
-        )
+        queues: Iterator[Tuple[Any,
+                               ...]] = zip(*[(Queue(), Queue())
+                                             for _ in range(self._num_envs)])
         parent_read_queues, parent_write_queues = queues
         self._workers = []
         for parent_read_queue, parent_write_queue, env_args in zip(
-            parent_read_queues, parent_write_queues, env_fn_args
-        ):
+                parent_read_queues, parent_write_queues, env_fn_args):
             thread = Thread(
                 target=self._worker_env,
                 args=(

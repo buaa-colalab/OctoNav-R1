@@ -12,7 +12,6 @@ from typing import Any, Dict, List, Optional
 
 import attr
 from gym import spaces
-
 from habitat.core.registry import registry
 from habitat.core.simulator import Observations, Sensor
 from habitat.core.utils import not_none_validator
@@ -44,17 +43,17 @@ class VLNEpisode(NavigationEpisode):
         instruction: single natural language instruction guide to goal.
         trajectory_id: id of ground truth trajectory path.
     """
-    reference_path: List[List[float]] = attr.ib(
-        default=None, validator=not_none_validator
-    )
-    instruction: InstructionData = attr.ib(
-        default=None, validator=not_none_validator
-    )
+
+    reference_path: List[List[float]] = attr.ib(default=None,
+                                                validator=not_none_validator)
+    instruction: InstructionData = attr.ib(default=None,
+                                           validator=not_none_validator)
     trajectory_id: int = attr.ib(default=None, validator=not_none_validator)
 
 
 @registry.register_sensor(name="InstructionSensor")
 class InstructionSensor(Sensor):
+
     def __init__(self, **kwargs):
         self.uuid = "instruction"
         self.observation_space = spaces.Dict()
@@ -66,7 +65,7 @@ class InstructionSensor(Sensor):
         self,
         observations: Dict[str, Observations],
         episode: VLNEpisode,
-        **kwargs
+        **kwargs,
     ):
         return {
             "text": episode.instruction.instruction_text,

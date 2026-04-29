@@ -8,21 +8,16 @@ from typing import TYPE_CHECKING, Any, List, Optional
 import attr
 import numpy as np
 from gym import spaces
-
 from habitat.core.logging import logger
 from habitat.core.registry import registry
 from habitat.core.simulator import AgentState, Sensor, SensorTypes
 from habitat.core.utils import not_none_validator
-from habitat.tasks.nav.nav import (
-    NavigationEpisode,
-    NavigationGoal,
-    NavigationTask,
-)
+from habitat.tasks.nav.nav import (NavigationEpisode, NavigationGoal,
+                                   NavigationTask)
 
 try:
-    from habitat.datasets.object_nav.object_nav_dataset import (
-        ObjectNavDatasetV1,
-    )
+    from habitat.datasets.object_nav.object_nav_dataset import \
+        ObjectNavDatasetV1
 except ImportError:
     pass
 
@@ -36,6 +31,7 @@ class ObjectGoalNavEpisode(NavigationEpisode):
 
     :param object_category: Category of the obect
     """
+
     object_category: Optional[str] = None
 
     @property
@@ -46,7 +42,8 @@ class ObjectGoalNavEpisode(NavigationEpisode):
 
 @attr.s(auto_attribs=True)
 class ObjectViewLocation:
-    r"""ObjectViewLocation provides information about a position around an object goal
+    r"""ObjectViewLocation provides information about
+    a position around an object goal
     usually that is navigable and the object is visible with specific agent
     configuration that episode's dataset was created.
      that is target for
@@ -63,6 +60,7 @@ class ObjectViewLocation:
         1.0 if whole object is inside of the rectangle and no pixel inside
         the rectangle belongs to anything except the object.
     """
+
     agent_state: AgentState
     iou: Optional[float]
 
@@ -84,7 +82,8 @@ class ObjectGoal(NavigationGoal):
         room from the semantic scene annotation
         room_name: name of the room, where object is located
         view_points: navigable positions around the object with specified
-        proximity of the object surface used for navigation metrics calculation.
+        proximity of the object surface used for navigation metrics
+        calculation.
         The object is visible from these positions.
     """
 
@@ -113,6 +112,7 @@ class ObjectGoalSensor(Sensor):
         dataset: a Object Goal navigation dataset that contains dictionaries
         of categories id to text mapping.
     """
+
     cls_uuid: str = "objectgoal"
 
     def __init__(
@@ -134,16 +134,16 @@ class ObjectGoalSensor(Sensor):
         return SensorTypes.SEMANTIC
 
     def _get_observation_space(self, *args: Any, **kwargs: Any):
-        sensor_shape = (1,)
+        sensor_shape = (1, )
         max_value = self.config.goal_spec_max_val - 1
         if self.config.goal_spec == "TASK_CATEGORY_ID":
             max_value = max(
-                self._dataset.category_to_task_category_id.values()
-            )
+                self._dataset.category_to_task_category_id.values())
 
-        return spaces.Box(
-            low=0, high=max_value, shape=sensor_shape, dtype=np.int64
-        )
+        return spaces.Box(low=0,
+                          high=max_value,
+                          shape=sensor_shape,
+                          dtype=np.int64)
 
     def get_observation(
         self,
@@ -154,13 +154,11 @@ class ObjectGoalSensor(Sensor):
     ) -> Optional[np.ndarray]:
         if len(episode.goals) == 0:
             logger.error(
-                f"No goal specified for episode {episode.episode_id}."
-            )
+                f"No goal specified for episode {episode.episode_id}.")
             return None
         if not isinstance(episode.goals[0], ObjectGoal):
-            logger.error(
-                f"First goal should be ObjectGoal, episode {episode.episode_id}."
-            )
+            logger.error(f"First goal should be ObjectGoal, episode \
+{episode.episode_id}.")
             return None
         category_name = episode.object_category
         if self.config.goal_spec == "TASK_CATEGORY_ID":
@@ -174,8 +172,7 @@ class ObjectGoalSensor(Sensor):
             return np.array([obj_goal.object_name_id], dtype=np.int64)
         else:
             raise RuntimeError(
-                "Wrong goal_spec specified for ObjectGoalSensor."
-            )
+                "Wrong goal_spec specified for ObjectGoalSensor.")
 
 
 @registry.register_task(name="ObjectNav-v1")

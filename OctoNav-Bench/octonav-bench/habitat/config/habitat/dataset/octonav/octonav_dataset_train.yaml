@@ -4,7 +4,7 @@ defaults:
   - _self_
 
 type: OctoNav-v1
-datasets: 
+datasets:
   - dataset_name: mp3d
     task: OctoNav
     split: train
@@ -22,6 +22,6 @@ datasets:
     split: train
     data_path: data/datasets/octonav/procthor-hab/{split}/{split}.json.gz
     scenes_dir: data/scene_datasets/ai2thor-hab/ai2thor-hab/configs/scenes/ProcTHOR/
-    overrides: 
+    overrides:
       scene_dataset: "data/scene_datasets/ai2thor-hab/ai2thor-hab/ai2thor-hab.scene_dataset_config.json"
       navmesh_include_static_objects: True

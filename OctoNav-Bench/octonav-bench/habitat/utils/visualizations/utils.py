@@ -12,7 +12,6 @@ import cv2
 import imageio
 import numpy as np
 import tqdm
-
 from habitat.core.logging import logger
 from habitat.utils.common import flatten_dict
 from habitat.utils.visualizations import maps
@@ -47,31 +46,29 @@ def paste_overlapping_image(
     max_pad = (
         max(
             0,
-            (location[0] + (foreground_size[0] - foreground_size[0] // 2))
-            - background.shape[0],
+            (location[0] + (foreground_size[0] - foreground_size[0] // 2)) -
+            background.shape[0],
         ),
         max(
             0,
-            (location[1] + (foreground_size[1] - foreground_size[1] // 2))
-            - background.shape[1],
+            (location[1] + (foreground_size[1] - foreground_size[1] // 2)) -
+            background.shape[1],
         ),
     )
 
     background_patch = background[
-        (location[0] - foreground_size[0] // 2 + min_pad[0]) : (
-            location[0]
-            + (foreground_size[0] - foreground_size[0] // 2)
-            - max_pad[0]
-        ),
-        (location[1] - foreground_size[1] // 2 + min_pad[1]) : (
-            location[1]
-            + (foreground_size[1] - foreground_size[1] // 2)
-            - max_pad[1]
-        ),
+        (location[0] - foreground_size[0] // 2 +
+         min_pad[0]):(location[0] +
+                      (foreground_size[0] - foreground_size[0] // 2) -
+                      max_pad[0]),
+        (location[1] - foreground_size[1] // 2 +
+         min_pad[1]):(location[1] +
+                      (foreground_size[1] - foreground_size[1] // 2) -
+                      max_pad[1]),
     ]
     foreground = foreground[
-        min_pad[0] : foreground.shape[0] - max_pad[0],
-        min_pad[1] : foreground.shape[1] - max_pad[1],
+        min_pad[0]:foreground.shape[0] - max_pad[0],
+        min_pad[1]:foreground.shape[1] - max_pad[1],
     ]
     if foreground.size == 0 or background_patch.size == 0:
         # Nothing to do, no overlap.
@@ -79,16 +76,16 @@ def paste_overlapping_image(
 
     if mask is not None:
         mask = mask[
-            min_pad[0] : foreground.shape[0] - max_pad[0],
-            min_pad[1] : foreground.shape[1] - max_pad[1],
+            min_pad[0]:foreground.shape[0] - max_pad[0],
+            min_pad[1]:foreground.shape[1] - max_pad[1],
         ]
 
     if foreground.shape[2] == 4:
         # Alpha blending
-        foreground = (
-            background_patch.astype(np.int32) * (255 - foreground[:, :, [3]])
-            + foreground[:, :, :3].astype(np.int32) * foreground[:, :, [3]]
-        ) // 255
+        foreground = (background_patch.astype(np.int32) *
+                      (255 - foreground[:, :, [3]]) +
+                      foreground[:, :, :3].astype(np.int32) *
+                      foreground[:, :, [3]]) // 255
     if mask is not None:
         background_patch[mask] = foreground[mask]
     else:
@@ -126,9 +123,8 @@ def images_to_video(
 
     # File names are not allowed to be over 255 characters
     video_name_split = video_name.split("/")
-    video_name = "/".join(
-        video_name_split[:-1] + [video_name_split[-1][:251] + ".mp4"]
-    )
+    video_name = "/".join(video_name_split[:-1] +
+                          [video_name_split[-1][:251] + ".mp4"])
 
     writer = imageio.get_writer(
         os.path.join(output_dir, video_name),
@@ -167,12 +163,13 @@ def tile_images(render_obs_images: List[np.ndarray]) -> np.ndarray:
     """Tiles multiple images of non-equal size to a single image. Images are
     tiled into columns making the returned image wider than tall.
 
-    NOTE: “candidate for deprecation”: possible duplicate function at habitat-lab/habitat/core/utils.py
+    NOTE: “candidate for deprecation”:
+    possible duplicate function at habitat-lab/habitat/core/utils.py
     """
     # Get the images in descending order of vertical height.
-    render_obs_images = sorted(
-        render_obs_images, key=lambda x: x.shape[0], reverse=True
-    )
+    render_obs_images = sorted(render_obs_images,
+                               key=lambda x: x.shape[0],
+                               reverse=True)
     img_cols = [[render_obs_images[0]]]
     max_height = render_obs_images[0].shape[0]
     cur_y = 0.0
@@ -200,14 +197,13 @@ def tile_images(render_obs_images: List[np.ndarray]) -> np.ndarray:
     total_width = sum(col_widths)
 
     # Tile the images, pasting the columns side by side.
-    final_im = np.zeros(
-        (max_height, total_width, 3), dtype=render_obs_images[0].dtype
-    )
+    final_im = np.zeros((max_height, total_width, 3),
+                        dtype=render_obs_images[0].dtype)
     cur_x = 0
     for i in range(len(img_cols)):
         next_x = cur_x + col_widths[i]
         total_col_im = np.concatenate(img_cols[i], axis=0)
-        final_im[: total_col_im.shape[0], cur_x:next_x] = total_col_im
+        final_im[:total_col_im.shape[0], cur_x:next_x] = total_col_im
         cur_x = next_x
     return final_im
 
@@ -236,9 +232,8 @@ def observations_to_image(observation: Dict, info: Dict) -> np.ndarray:
                 obs_k = np.concatenate([obs_k for _ in range(3)], axis=2)
             render_obs_images.append(obs_k)
 
-    assert (
-        len(render_obs_images) > 0
-    ), "Expected at least one visual sensor enabled."
+    assert len(render_obs_images) > 0, (
+        "Expected at least one visual sensor enabled.")
 
     shapes_are_equal = len(set(x.shape for x in render_obs_images)) == 1
 
@@ -255,8 +250,7 @@ def observations_to_image(observation: Dict, info: Dict) -> np.ndarray:
     top_down_map_key = "top_down_map"
     if top_down_map_key in info:
         top_down_map = maps.colorize_draw_agent_and_fit_to_height(
-            info[top_down_map_key], render_frame.shape[0]
-        )
+            info[top_down_map_key], render_frame.shape[0])
         render_frame = np.concatenate((render_frame, top_down_map), axis=1)
     return render_frame
 
@@ -295,21 +289,23 @@ def append_text_underneath_image(image: np.ndarray, text: str):
             font_thickness,
             lineType=cv2.LINE_AA,
         )
-    text_image = blank_image[0 : y + 10, 0:w]
+    text_image = blank_image[0:y + 10, 0:w]
     final = np.concatenate((image, text_image), axis=0)
     return final
 
 
-def overlay_text_to_image(
-    image: np.ndarray, text: List[str], font_size: float = 0.5
-):
+def overlay_text_to_image(image: np.ndarray,
+                          text: List[str],
+                          font_size: float = 0.5):
     r"""Overlays lines of text on top of an image.
 
-    First this will render to the left-hand side of the image, once that column is full,
+    First this will render to the left-hand side of the image,
+    once that column is full,
     it will render to the right hand-side of the image.
 
     :param image: The image to put text on top.
-    :param text: The list of strings which will be rendered (separated by new lines).
+    :param text: The list of strings which will
+    be rendered (separated by new lines).
     :param font_size: Font size.
     :return: A new image with text overlaid on top.
     """

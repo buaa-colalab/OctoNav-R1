@@ -6,18 +6,13 @@ import os
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 import attr
+import habitat_sim
 import numpy as np
 from gym import Space, spaces
-
-import habitat_sim
 from habitat.core.logging import logger
 from habitat.core.registry import registry
-from habitat.core.simulator import (
-    RGBSensor,
-    Sensor,
-    SensorTypes,
-    VisualObservation,
-)
+from habitat.core.simulator import (RGBSensor, Sensor, SensorTypes,
+                                    VisualObservation)
 from habitat.core.utils import not_none_validator
 from habitat.tasks.nav.nav import NavigationEpisode
 from habitat.tasks.nav.object_nav_task import ObjectGoal, ObjectNavigationTask
@@ -26,9 +21,8 @@ from habitat_sim import bindings as hsim
 from habitat_sim.agent.agent import AgentState, SixDOFPose
 
 try:
-    from habitat.datasets.image_nav.instance_image_nav_dataset import (
-        InstanceImageNavDatasetV1,
-    )
+    from habitat.datasets.image_nav.instance_image_nav_dataset import \
+        InstanceImageNavDatasetV1
 except ImportError:
     pass
 
@@ -55,7 +49,7 @@ class InstanceImageGoalNavEpisode(NavigationEpisode):
         """The key to retrieve the instance goal"""
         sid = os.path.basename(self.scene_id)
         for x in [".glb", ".basis"]:
-            sid = sid[: -len(x)] if sid.endswith(x) else sid
+            sid = sid[:-len(x)] if sid.endswith(x) else sid
         return f"{sid}_{self.goal_object_id}"
 
 
@@ -63,12 +57,10 @@ class InstanceImageGoalNavEpisode(NavigationEpisode):
 class InstanceImageParameters:
     position: List[float] = attr.ib(default=None, validator=not_none_validator)
     rotation: List[float] = attr.ib(default=None, validator=not_none_validator)
-    hfov: Union[int, float] = attr.ib(
-        default=None, validator=not_none_validator
-    )
-    image_dimensions: Tuple[int, int] = attr.ib(
-        default=None, validator=not_none_validator
-    )
+    hfov: Union[int, float] = attr.ib(default=None,
+                                      validator=not_none_validator)
+    image_dimensions: Tuple[int, int] = attr.ib(default=None,
+                                                validator=not_none_validator)
     frame_coverage: Optional[float] = None
     object_coverage: Optional[float] = None
 
@@ -84,8 +76,7 @@ class InstanceImageGoal(ObjectGoal):
     """
 
     image_goals: List[InstanceImageParameters] = attr.ib(
-        default=None, validator=not_none_validator
-    )
+        default=None, validator=not_none_validator)
     object_surface_area: Optional[float] = None
 
 
@@ -114,13 +105,11 @@ class InstanceImageGoalSensor(RGBSensor):
         *args: Any,
         **kwargs: Any,
     ):
-        from habitat.datasets.image_nav.instance_image_nav_dataset import (
-            InstanceImageNavDatasetV1,
-        )
+        from habitat.datasets.image_nav.instance_image_nav_dataset import \
+            InstanceImageNavDatasetV1
 
-        assert isinstance(
-            dataset, InstanceImageNavDatasetV1
-        ), "Provided dataset needs to be InstanceImageNavDatasetV1"
+        assert isinstance(dataset, InstanceImageNavDatasetV1), (
+            "Provided dataset needs to be InstanceImageNavDatasetV1")
 
         self._dataset = dataset
         self._sim = sim
@@ -132,16 +121,12 @@ class InstanceImageGoalSensor(RGBSensor):
         return self.cls_uuid
 
     def _get_observation_space(self, *args: Any, **kwargs: Any) -> Space:
-        H, W = (
-            next(iter(self._dataset.goals.values()))
-            .image_goals[0]
-            .image_dimensions
-        )
+        H, W = (next(iter(
+            self._dataset.goals.values())).image_goals[0].image_dimensions)
         return spaces.Box(low=0, high=255, shape=(H, W, 3), dtype=np.uint8)
 
-    def _add_sensor(
-        self, img_params: InstanceImageParameters, sensor_uuid: str
-    ) -> None:
+    def _add_sensor(self, img_params: InstanceImageParameters,
+                    sensor_uuid: str) -> None:
         spec = habitat_sim.CameraSensorSpec()
         spec.uuid = sensor_uuid
         spec.sensor_type = habitat_sim.SensorType.COLOR
@@ -158,7 +143,8 @@ class InstanceImageGoalSensor(RGBSensor):
                 rotation=agent_state.rotation,
                 sensor_states={
                     **agent_state.sensor_states,
-                    sensor_uuid: SixDOFPose(
+                    sensor_uuid:
+                    SixDOFPose(
                         position=np.array(img_params.position),
                         rotation=quaternion_from_coeff(img_params.rotation),
                     ),
@@ -173,14 +159,12 @@ class InstanceImageGoalSensor(RGBSensor):
         hsim.SensorFactory.delete_subtree_sensor(agent.scene_node, sensor_uuid)
         del agent._sensors[sensor_uuid]
         agent.agent_config.sensor_specifications = [
-            s
-            for s in agent.agent_config.sensor_specifications
+            s for s in agent.agent_config.sensor_specifications
             if s.uuid != sensor_uuid
         ]
 
     def _get_instance_image_goal(
-        self, img_params: InstanceImageParameters
-    ) -> VisualObservation:
+            self, img_params: InstanceImageParameters) -> VisualObservation:
         """To render the instance image goal, a temporary HabitatSim sensor is
         created with the specified InstanceImageParameters. This sensor renders
         the image and is then removed.
@@ -202,13 +186,11 @@ class InstanceImageGoalSensor(RGBSensor):
     ) -> Optional[VisualObservation]:
         if len(episode.goals) == 0:
             logger.error(
-                f"No goal specified for episode {episode.episode_id}."
-            )
+                f"No goal specified for episode {episode.episode_id}.")
             return None
         if not isinstance(episode.goals[0], InstanceImageGoal):
-            logger.error(
-                f"First goal should be InstanceImageGoal, episode {episode.episode_id}."
-            )
+            logger.error(f"First goal should be InstanceImageGoal, \
+episode {episode.episode_id}.")
             return None
 
         episode_uniq_id = f"{episode.scene_id} {episode.episode_id}"
@@ -234,23 +216,20 @@ class InstanceImageGoalHFOVSensor(Sensor):
         return self.cls_uuid
 
     def _get_observation_space(self, *args: Any, **kwargs: Any) -> Space:
-        return spaces.Box(low=0.0, high=360.0, shape=(1,), dtype=np.float32)
+        return spaces.Box(low=0.0, high=360.0, shape=(1, ), dtype=np.float32)
 
     def _get_sensor_type(self, *args: Any, **kwargs: Any):
         return SensorTypes.MEASUREMENT
 
-    def get_observation(
-        self, *args: Any, episode: InstanceImageGoalNavEpisode, **kwargs: Any
-    ) -> np.ndarray:
+    def get_observation(self, *args: Any, episode: InstanceImageGoalNavEpisode,
+                        **kwargs: Any) -> np.ndarray:
         if len(episode.goals) == 0:
             logger.error(
-                f"No goal specified for episode {episode.episode_id}."
-            )
+                f"No goal specified for episode {episode.episode_id}.")
             return None
         if not isinstance(episode.goals[0], InstanceImageGoal):
-            logger.error(
-                f"First goal should be InstanceImageGoal, episode {episode.episode_id}."
-            )
+            logger.error(f"First goal should be InstanceImageGoal, \
+episode {episode.episode_id}.")
             return None
 
         img_params = episode.goals[0].image_goals[episode.goal_image_id]

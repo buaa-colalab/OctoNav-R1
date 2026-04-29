@@ -8,47 +8,27 @@
 ``habitat.core.Episode``. Each episode consists of a single instantiation
 of a ``habitat.Agent`` inside ``habitat.Env``.
 """
+
 import copy
 import os
 import random
 from itertools import groupby
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    TypeVar,
-    Union,
-)
+from typing import (TYPE_CHECKING, Any, Callable, Dict, Generic, Iterator,
+                    List, Optional, Sequence, TypeVar, Union)
 
 import attr
 import numpy as np
-from numpy import ndarray
-
 from habitat.core.utils import DatasetJSONEncoder, not_none_validator
+from numpy import ndarray
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
-
 
 ALL_SCENES_MASK = "*"
 
 
 @attr.s(auto_attribs=True)
 class BaseEpisode:
-    """
-    Base class for episode specification that includes only the episode_id
-    and scene_id. This class allows passing the minimum required episode
-    information to identify the episode (unique key) to the habitat baseline process, thus saving evaluation time.
-
-    :property episode_id: id of episode in the dataset, usually episode number.
-    :property scene_id: id of scene in dataset.
-    """
 
     episode_id: str = attr.ib(default=None, validator=not_none_validator)
     scene_id: str = attr.ib(default=None, validator=not_none_validator)
@@ -56,30 +36,16 @@ class BaseEpisode:
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Episode(BaseEpisode):
-    """Base class for episode specification that includes initial position and
-    rotation of agent, scene id, episode.
-
-    :property start_position: list of length 3 for cartesian coordinates :math:`$(x, y, z)$`
-    :property start_rotation: list of length 4 for :math:`$(x, y, z)$` elements of unit quaternion (versor) representing 3D agent orientation (https://en.wikipedia.org/wiki/Versor). The rotation specifying the agent's orientation is relative to the world coordinate axes.
-
-    This information is provided by a :ref:`Dataset` instance.
-
-    """
 
     # path to the SceneDataset config file
-    scene_dataset_config: str = attr.ib(
-        default="default", validator=not_none_validator
-    )
-    # list of paths to search for object config files in addition to the SceneDataset
+    scene_dataset_config: str = attr.ib(default="default",
+                                        validator=not_none_validator)
     additional_obj_config_paths: List[str] = attr.ib(
-        default=[], validator=not_none_validator
-    )
-    start_position: List[float] = attr.ib(
-        default=None, validator=not_none_validator
-    )
-    start_rotation: List[float] = attr.ib(
-        default=None, validator=not_none_validator
-    )
+        default=[], validator=not_none_validator)
+    start_position: List[float] = attr.ib(default=None,
+                                          validator=not_none_validator)
+    start_rotation: List[float] = attr.ib(default=None,
+                                          validator=not_none_validator)
     info: Optional[Dict[str, Any]] = None
     _shortest_path_cache: Any = attr.ib(init=False, default=None)
 
@@ -87,9 +53,9 @@ class Episode(BaseEpisode):
     # on_setattr=Episode._reset_shortest_path_cache_hook works as attrs
     # will pass the instance as the first argument!
     @staticmethod
-    def _reset_shortest_path_cache_hook(
-        self: "Episode", attribute: attr.Attribute, value: Any
-    ) -> Any:
+    def _reset_shortest_path_cache_hook(self: "Episode",
+                                        attribute: attr.Attribute,
+                                        value: Any) -> Any:
         self._shortest_path_cache = None
         return value
 
@@ -115,38 +81,27 @@ class Dataset(Generic[T]):
 
     @staticmethod
     def scene_from_scene_path(scene_path: str) -> str:
-        """Helper method to get the scene name from an episode.
-
-        :param scene_path: The path to the scene, assumes this is formatted: :py:`/path/to/<scene_name>.<ext>`
-        :return: <scene_name> from the path
-        """
         return os.path.splitext(os.path.basename(scene_path))[0]
 
     @classmethod
     def get_scenes_to_load(cls, config: "DictConfig") -> List[str]:
-        """
-        Returns a list of scene names that would be loaded with this dataset. Useful for determining what scenes to split up among different workers.
-
-        :param config: The config for the dataset
-        :return: A list of scene names that would be loaded with the dataset
-        """
-        assert cls.check_config_paths_exist(config)  # type: ignore[attr-defined]
+        assert cls.check_config_paths_exist(
+            config)  # type: ignore[attr-defined]
         dataset = cls(config)  # type: ignore[call-arg]
         return list(map(cls.scene_from_scene_path, dataset.scene_ids))
 
     @classmethod
     def build_content_scenes_filter(cls, config) -> Callable[[T], bool]:
         """
-        Returns a filter function that takes an episode and returns True if that
+        Returns a filter function that takes an episode and returns
+        True if that
         episode is valid under the content_scenes field of the provided config
         """
         scenes_to_load = set(config.content_scenes)
 
         def _filter(ep: T) -> bool:
-            return (
-                ALL_SCENES_MASK in scenes_to_load
-                or cls.scene_from_scene_path(ep.scene_id) in scenes_to_load
-            )
+            return (ALL_SCENES_MASK in scenes_to_load or
+                    cls.scene_from_scene_path(ep.scene_id) in scenes_to_load)
 
         return _filter
 
@@ -167,8 +122,7 @@ class Dataset(Generic[T]):
         :return: list of episodes for the :p:`scene_id`.
         """
         return list(
-            filter(lambda x: x.scene_id == scene_id, iter(self.episodes))
-        )
+            filter(lambda x: x.scene_id == scene_id, iter(self.episodes)))
 
     def get_episodes(self, indexes: List[int]) -> List[T]:
         """Get all episodes from a set of indices.
@@ -194,14 +148,15 @@ class Dataset(Generic[T]):
 
     def to_json(self) -> str:
         """
-        Serialize the Dataset into JSON formatted string so it can be written to a file.
+        Serialize the Dataset into JSON formatted string so
+        it can be written to a file.
         """
         result = DatasetJSONEncoder().encode(self)
         return result
 
-    def from_json(
-        self, json_str: str, scenes_dir: Optional[str] = None
-    ) -> None:
+    def from_json(self,
+                  json_str: str,
+                  scenes_dir: Optional[str] = None) -> None:
         """Creates dataset from :p:`json_str`.
 
         :param json_str: JSON string containing episodes information.
@@ -267,20 +222,17 @@ class Dataset(Generic[T]):
         """
         if self.num_episodes < num_splits:
             raise ValueError(
-                "Not enough episodes to create those many splits."
-            )
+                "Not enough episodes to create those many splits.")
 
         if episodes_per_split is not None:
             if allow_uneven_splits:
                 raise ValueError(
                     "You probably don't want to specify allow_uneven_splits"
-                    " and episodes_per_split."
-                )
+                    " and episodes_per_split.")
 
             if num_splits * episodes_per_split > self.num_episodes:
                 raise ValueError(
-                    "Not enough episodes to create those many splits."
-                )
+                    "Not enough episodes to create those many splits.")
 
         new_datasets = []
 
@@ -297,9 +249,9 @@ class Dataset(Generic[T]):
 
         num_episodes = sum(split_lengths)
 
-        rand_items = np.random.choice(
-            self.num_episodes, num_episodes, replace=False
-        ).tolist()
+        rand_items = np.random.choice(self.num_episodes,
+                                      num_episodes,
+                                      replace=False).tolist()
         if collate_scene_ids:
             scene_ids: Dict[str, List[int]] = {}
             for rand_ind in rand_items:
@@ -327,25 +279,6 @@ class Dataset(Generic[T]):
 
 
 class EpisodeIterator(Iterator[T]):
-    """Episode Iterator class that gives options for how a list of episodes
-    should be iterated.
-
-    Some options are desirable for better internal simulator performance.
-
-    More context: simulator suffers overhead when switching
-    between scenes, therefore episodes of the same scene should be consecutively loaded. However, if too many consecutive episodes from same scene
-    are feed into RL model, the model will risk overfitting that scene.
-    Therefore it's better to load same scene consecutively and switch once a
-    number threshold is reached.
-
-    Currently supports the following features:
-
-    - **Cycling:** when all episodes are iterated, cycle back to start instead of throwing StopIteration.
-    - **Cycling with shuffle:** when cycling back, shuffle episodes groups grouped by scene.
-    - **Group by scene:** episodes of same scene will be grouped and loaded consecutively.
-    - **Set max scene repeat:** set a number threshold on how many episodes from the same scene can be loaded consecutively.
-    - **Sample episodes:** sample the specified number of episodes.
-    """
 
     def __init__(
         self,
@@ -359,24 +292,6 @@ class EpisodeIterator(Iterator[T]):
         step_repetition_range: float = 0.2,
         seed: int = None,
     ) -> None:
-        """..
-
-        :param episodes: list of episodes.
-        :param cycle: if :py:`True`, cycle back to first episodes when
-            StopIteration.
-        :param shuffle: if :py:`True`, shuffle scene groups when cycle. No
-            effect if cycle is set to :py:`False`. Will shuffle grouped scenes
-            if :p:`group_by_scene` is :py:`True`.
-        :param group_by_scene: if :py:`True`, group episodes from same scene.
-        :param max_scene_repeat_episodes: threshold of how many episodes from the same
-            scene can be loaded consecutively. :py:`-1` for no limit
-        :param max_scene_repeat_steps: threshold of how many steps from the same
-            scene can be taken consecutively. :py:`-1` for no limit
-        :param num_episode_sample: number of episodes to be sampled. :py:`-1`
-            for no sampling.
-        :param step_repetition_range: The maximum number of steps within each scene is uniformly drawn from [1 - step_repeat_range, 1 + step_repeat_range] * max_scene_repeat_steps on each scene switch.  This stops all workers from swapping scenes at the same time
-        :param seed: Provide an option random seed (for numpy and random module) to make shuffling behavior deterministic.
-        """
         if seed:
             random.seed(seed)
             np.random.seed(seed)
@@ -384,7 +299,9 @@ class EpisodeIterator(Iterator[T]):
         # sample episodes
         if num_episode_sample >= 0:
             episodes = np.random.choice(  # type: ignore[assignment]
-                episodes, num_episode_sample, replace=False  # type: ignore[arg-type]
+                episodes,
+                num_episode_sample,
+                replace=False,  # type: ignore[arg-type]
             )
 
         if not isinstance(episodes, list):
@@ -435,10 +352,8 @@ class EpisodeIterator(Iterator[T]):
 
             next_episode = next(self._iterator)
 
-        if (
-            self._prev_scene_id != next_episode.scene_id
-            and self._prev_scene_id is not None
-        ):
+        if (self._prev_scene_id != next_episode.scene_id
+                and self._prev_scene_id is not None):
             self._rep_count = 0
             self._step_count = 0
 
@@ -446,23 +361,12 @@ class EpisodeIterator(Iterator[T]):
         return next_episode
 
     def set_next_episode_by_index(self, episode_index: int) -> None:
-        """
-        Set the next episode to run by episode index. The new episode will be loading upon resetting the simulator.
-
-        :param episode_index: The desired index for the next Episode queued by the iterator.
-        """
         if episode_index < 0 or episode_index >= len(self.episodes):
             raise ValueError(
-                f"Episode index is out of bounds: {episode_index}."
-            )
+                f"Episode index is out of bounds: {episode_index}.")
         self._iterator = iter([self.episodes[episode_index]])
 
     def set_next_episode_by_id(self, episode_id: str) -> None:
-        """
-        Set the next episode to run by episode ID. The new episode will be loading upon resetting the simulator.
-
-        :param episode_id: The desired id string for the next Episode queued by the iterator.
-        """
         self._iterator = iter(self.episodes)
         for episode in self.episodes:
             if episode.episode_id == episode_id:
@@ -472,9 +376,6 @@ class EpisodeIterator(Iterator[T]):
             raise ValueError(f"Episode with ID {episode_id} not found.")
 
     def _forced_scene_switch(self) -> None:
-        """
-        Internal method to switch the scene. Moves remaining episodes from current scene to the end and switch to next scene episodes.
-        """
         grouped_episodes = [
             list(g)
             for k, g in groupby(self._iterator, key=lambda x: x.scene_id)
@@ -487,9 +388,7 @@ class EpisodeIterator(Iterator[T]):
         self._iterator = iter(sum(grouped_episodes, []))
 
     def _shuffle(self) -> None:
-        """
-        Internal method that shuffles the remaining episodes. If :py:`self.group_by_scene` is true, then shuffle groups of scenes.
-        """
+
         assert self.shuffle
         episodes = list(self._iterator)
 
@@ -501,18 +400,8 @@ class EpisodeIterator(Iterator[T]):
         self._iterator = iter(episodes)
 
     def _group_scenes(
-        self, episodes: Union[Sequence[Episode], List[Episode], ndarray]
-    ) -> List[T]:
-        """Internal method that groups episodes by scene
-        Groups will be ordered by the order their first episode's appearance
-        in the list of episodes.
-
-        :param episodes: The Episodes to group and re-order.
-        :return: The Episodes grouped and re-orderd by scene.
-
-        So if the episodes list shuffled before calling this method,
-        the scenes will be in a random order.
-        """
+            self, episodes: Union[Sequence[Episode], List[Episode],
+                                  ndarray]) -> List[T]:
         assert self.group_by_scene
 
         scene_sort_keys: Dict[str, int] = {}
@@ -520,7 +409,8 @@ class EpisodeIterator(Iterator[T]):
             if e.scene_id not in scene_sort_keys:
                 scene_sort_keys[e.scene_id] = len(scene_sort_keys)
 
-        return sorted(episodes, key=lambda e: scene_sort_keys[e.scene_id])  # type: ignore[arg-type]
+        return sorted(episodes, key=lambda e: scene_sort_keys[e.scene_id]
+                      )  # type: ignore[arg-type]
 
     def step_taken(self) -> None:
         """
@@ -530,21 +420,10 @@ class EpisodeIterator(Iterator[T]):
 
     @staticmethod
     def _randomize_value(value: int, value_range: float) -> int:
-        """
-        Generates a random int from a uniform distribution centered at value within the provided range of variance.
-
-        :param value: The int mean of the distribution for the sample.
-        :param value_range: The float [0,1] which indicates the range of the sampling distribution as a ratio of the mean. For example, value_range==0.1 would produce a uniformly sampled value with a maximum 10% deviation of the mean [value*0.9, value*1.1].
-        :return: The randomly sampled value from the distribution.
-        """
-        return random.randint(
-            int(value * (1 - value_range)), int(value * (1 + value_range))
-        )
+        return random.randint(int(value * (1 - value_range)),
+                              int(value * (1 + value_range)))
 
     def _set_shuffle_intervals(self) -> None:
-        """
-        Sets or samples the maximum number of repeated episodes for a scene before shuffling.
-        """
         if self.max_scene_repetition_episodes > 0:
             self._max_rep_episode = self.max_scene_repetition_episodes
         else:
@@ -552,30 +431,20 @@ class EpisodeIterator(Iterator[T]):
 
         if self.max_scene_repetition_steps > 0:
             self._max_rep_step = self._randomize_value(
-                self.max_scene_repetition_steps, self.step_repetition_range
-            )
+                self.max_scene_repetition_steps, self.step_repetition_range)
         else:
             self._max_rep_step = None
 
     def _forced_scene_switch_if(self) -> None:
-        """
-        Triggers switching scenes and re-organizes the Episode queue if the maximum number of repetitions or steps per-scene has been reached.
-        """
         do_switch = False
         self._rep_count += 1
 
-        # Shuffle if a scene has been selected more than _max_rep_episode times in a row
-        if (
-            self._max_rep_episode is not None
-            and self._rep_count >= self._max_rep_episode
-        ):
+        if (self._max_rep_episode is not None
+                and self._rep_count >= self._max_rep_episode):
             do_switch = True
 
-        # Shuffle if a scene has been used for more than _max_rep_step steps in a row
-        if (
-            self._max_rep_step is not None
-            and self._step_count >= self._max_rep_step
-        ):
+        if (self._max_rep_step is not None
+                and self._step_count >= self._max_rep_step):
             do_switch = True
 
         if do_switch:
